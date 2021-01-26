@@ -1,7 +1,6 @@
 package com.dsige.reparto.dominion.data.local.repository
 
 import android.content.Context
-import android.location.Location
 import androidx.lifecycle.LiveData
 import com.dsige.reparto.dominion.data.local.model.*
 import com.dsige.reparto.dominion.helper.Mensaje
@@ -16,7 +15,8 @@ interface AppRepository {
     fun getUsuarioService(
         usuario: String, password: String, imei: String, version: String, token: String
     ): Observable<Usuario>
-    fun getUsuarioId() :Observable<Int>
+
+    fun getUsuarioId(): Observable<Int>
 
     fun insertUsuario(u: Usuario): Completable
     fun deleteSesion(): Completable
@@ -47,5 +47,11 @@ interface AppRepository {
     fun getRecibos(repartoId: Int): LiveData<List<Recibo>>
     fun savePhotoReparto(p: Photo): Completable
 
-    fun saveOperarioGps(e: EstadoOperario): Observable<Mensaje>
+
+
+    //gps
+    fun insertGps(e: OperarioGps): Completable
+    fun getSendGps(): Observable<List<OperarioGps>>
+    fun saveOperarioGps(e: OperarioGps): Observable<Mensaje>
+    fun updateEnabledGps(t: Mensaje): Completable
 }

@@ -26,24 +26,13 @@ interface ApiService {
         @Query("version") version: String
     ): Observable<Sync>
 
-    // TODO  NUEVA VERSION 5.0.6
-
     @Headers("Cache-Control: no-cache")
     @POST("SaveNew")
     fun sendRegistroRx(@Body query: RequestBody): Observable<Mensaje>
 
-    @Headers("Cache-Control: no-cache")
-    @POST("Photos")
-    fun sendPhoto(@Body query: RequestBody): Observable<Mensaje>
-
     @POST("SaveEstadoMovil")
     fun saveEstadoMovil(@Body movil: RequestBody): Call<Mensaje>
 
-    @POST("SaveOperarioGps")
+    @POST("SaveGpsOperario")
     fun saveOperarioGps(@Body gps: RequestBody): Observable<Mensaje>
-
-    @Headers("Cache-Control: no-cache")
-    @POST("SaveReparto")
-    fun sendReparto(@Body query: RequestBody): Observable<Mensaje>
-
 }

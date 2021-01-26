@@ -1,8 +1,6 @@
 package com.dsige.reparto.dominion.data.local.repository
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.location.Location
 import android.util.Log
 import androidx.lifecycle.LiveData
 import com.dsige.reparto.dominion.data.local.model.*
@@ -228,10 +226,30 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
         }
     }
 
-    override fun saveOperarioGps(e: EstadoOperario): Observable<Mensaje> {
+    override fun insertGps(e: OperarioGps): Completable {
+        return Completable.fromAction {
+            dataBase.operarioGpsDao().insertOperarioGpsTask(e)
+        }
+    }
+
+    override fun getSendGps(): Observable<List<OperarioGps>> {
+        return Observable.create {
+            val gps: List<OperarioGps> = dataBase.operarioGpsDao().getOperarioGpsTask()
+            it.onNext(gps)
+            it.onComplete()
+        }
+    }
+
+    override fun saveOperarioGps(e: OperarioGps): Observable<Mensaje> {
         val json = Gson().toJson(e)
         Log.i("TAG", json)
         val body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
         return apiService.saveOperarioGps(body)
+    }
+
+    override fun updateEnabledGps(t: Mensaje): Completable {
+        return Completable.fromAction {
+            dataBase.operarioGpsDao().updateEnabledGps(t.codigoBase)
+        }
     }
 }

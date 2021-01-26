@@ -7,9 +7,8 @@ import android.util.Log
 import androidx.work.ListenableWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.dsige.reparto.dominion.data.local.model.EstadoOperario
+import com.dsige.reparto.dominion.data.local.model.OperarioGps
 import com.dsige.reparto.dominion.data.local.model.Photo
-import com.dsige.reparto.dominion.data.local.model.Registro
 import com.dsige.reparto.dominion.data.local.model.Recibo
 import com.dsige.reparto.dominion.data.local.repository.AppRepository
 import com.dsige.reparto.dominion.helper.Mensaje
@@ -25,9 +24,6 @@ import io.reactivex.schedulers.Schedulers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
 import java.util.ArrayList
 import javax.inject.Inject
@@ -70,25 +66,64 @@ internal constructor(
                 override fun onComplete() {}
                 override fun onError(e: Throwable) {}
                 override fun onNext(t: Int) {
-                    sendGps(
-                        EstadoOperario(
-                            t, l.latitude.toString(), l.longitude.toString(),
-                            "", Util.getFechaActual()
+                    saveGps(
+                        OperarioGps(
+                            t,
+                            l.latitude.toString(),
+                            l.longitude.toString(),
+                            "",
+                            Util.getFechaActual(),
+                            1
                         )
                     )
                 }
             })
     }
 
-    private fun sendGps(e: EstadoOperario) {
-        roomRepository.saveOperarioGps(e)
+    private fun saveGps(e: OperarioGps) {
+        roomRepository.insertGps(e)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : Observer<Mensaje> {
+            .subscribe(object : CompletableObserver {
                 override fun onSubscribe(d: Disposable) {}
                 override fun onError(e: Throwable) {}
+                override fun onComplete() {
+                    sendGps()
+                }
+            })
+    }
+
+    private fun sendGps() {
+        roomRepository.getSendGps()
+            .flatMap { observable ->
+                Observable.fromIterable(observable).flatMap { a ->
+                    Observable.zip(
+                        Observable.just(a),
+                        roomRepository.saveOperarioGps(a), { _, mensaje -> mensaje })
+                }
+            }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<Mensaje> {
                 override fun onComplete() {}
-                override fun onNext(t: Mensaje) {}
+                override fun onSubscribe(d: Disposable) {}
+                override fun onError(t: Throwable) {
+                    Log.i("TAG", t.toString())
+                }
+
+                override fun onNext(t: Mensaje) {
+                    updateEnabledGps(t)
+                }
+            })
+    }
+
+    private fun updateEnabledGps(t: Mensaje) {
+        roomRepository.updateEnabledGps(t)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : CompletableObserver {
+                override fun onSubscribe(d: Disposable) {}
+                override fun onComplete() {}
+                override fun onError(e: Throwable) {}
             })
     }
 }

@@ -68,4 +68,9 @@ class DataBaseModule {
     internal fun provideReciboDao(appDataBase: AppDataBase): ReciboDao {
         return appDataBase.reciboDao()
     }
+
+    @Provides
+    internal fun provideGpsDao(appDataBase: AppDataBase): OperarioGpsDao {
+        return appDataBase.operarioGpsDao()
+    }
 }

@@ -16,9 +16,10 @@ import com.dsige.reparto.dominion.data.local.model.*
         Parametro::class,
         Registro::class,
         Photo::class,
-        Recibo::class
+        Recibo::class,
+        OperarioGps::class
     ],
-    version = 2, // version 1 en play store
+    version = 6, // version 1 en play store
     exportSchema = false
 )
 abstract class AppDataBase : RoomDatabase() {
@@ -31,6 +32,7 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun registroDao(): RegistroDao
     abstract fun photoDao(): PhotoDao
     abstract fun reciboDao(): ReciboDao
+    abstract fun operarioGpsDao(): OperarioGpsDao
 
     companion object {
         @Volatile

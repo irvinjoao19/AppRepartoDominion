@@ -39,11 +39,7 @@ internal constructor(
     class Factory @Inject constructor(private val repository: Provider<AppRepository>) :
         ChildWorkerFactory {
         override fun create(appContext: Context, params: WorkerParameters): ListenableWorker {
-            return RepartoWork(
-                appContext,
-                params,
-                repository.get()
-            )
+            return RepartoWork(appContext, params, repository.get())
         }
     }
 

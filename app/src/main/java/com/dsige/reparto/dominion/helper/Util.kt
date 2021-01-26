@@ -1047,17 +1047,17 @@ object Util {
     }
 
     fun executeGpsWork(context: Context) {
+//        val downloadConstraints = Constraints.Builder()
+//            .setRequiresCharging(true)
+//            .setRequiredNetworkType(NetworkType.CONNECTED)
+//            .build()
         val locationWorker =
-            PeriodicWorkRequestBuilder<GpsWork>(
-                15, TimeUnit.MINUTES
-            )
+            PeriodicWorkRequestBuilder<GpsWork>(15, TimeUnit.MINUTES)
+//                .setConstraints(downloadConstraints)
                 .build()
         WorkManager
             .getInstance(context)
-            .enqueueUniquePeriodicWork(
-                "Gps-Work",
-                ExistingPeriodicWorkPolicy.KEEP, locationWorker
-            )
+            .enqueueUniquePeriodicWork("Gps-Work", ExistingPeriodicWorkPolicy.KEEP, locationWorker)
     }
 
     fun closeGpsWork(context: Context) {
