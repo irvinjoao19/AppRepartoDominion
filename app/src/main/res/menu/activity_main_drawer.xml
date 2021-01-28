@@ -3,26 +3,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <item android:title="Principal">
+    <item android:title="@string/title_main">
         <menu>
             <item
                 android:id="@+id/sync"
                 android:icon="@drawable/ic_points"
-                android:title="Sincronizar" />
+                android:title="@string/title_sync" />
             <item
                 android:id="@+id/activities"
                 android:icon="@drawable/ic_points"
-                android:title="Inicio de Actividades" />
+                android:title="@string/title_inicio_actividades" />
+
+            <item
+                android:id="@+id/gps"
+                android:icon="@drawable/ic_points"
+                android:title="@string/title_servicio_gps" />
             <item
                 android:id="@+id/send"
                 android:icon="@drawable/ic_points"
-                android:title="Envio de Pendientes" />
+                android:title="@string/title_envio_pendientes" />
         </menu>
     </item>
 
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/lt"
-            android:title="Cerrar Sesión" />
+            android:title="@string/title_logout" />
     </group>
 </menu>

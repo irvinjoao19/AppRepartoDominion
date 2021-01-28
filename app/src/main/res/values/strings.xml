@@ -187,4 +187,10 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="nav_header_title">header_title</string>
     <string name="nav_header_subtitle">sub_title</string>
+    <string name="title_sync">Sincronizar</string>
+    <string name="title_inicio_actividades">Inicio de Actividades</string>
+    <string name="title_servicio_gps">Servicio Gps</string>
+    <string name="title_envio_pendientes">Envio de Pendientes</string>
+    <string name="title_logout">Cerrar Sesión</string>
+    <string name="title_main">Principal</string>
 </resources>

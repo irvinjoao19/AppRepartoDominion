@@ -649,14 +649,14 @@ object Util {
         @SuppressLint("SimpleDateFormat") val format = SimpleDateFormat("dd/MM/yyyy")
         var date1 = Date()
         try {
-            date1 = format.parse(fechaFinal)
+            date1 = format.parse(fechaFinal)!!
         } catch (e: ParseException) {
             e.printStackTrace()
         }
 
         var date2 = Date()
         try {
-            date2 = format.parse(fechaInicial)
+            date2 = format.parse(fechaInicial)!!
         } catch (e: ParseException) {
             e.printStackTrace()
         }
@@ -736,8 +736,11 @@ object Util {
     @Throws(IOException::class)
     fun deleteDirectory(file: File) {
         if (file.isDirectory) {
-            for (ct: File in file.listFiles()) {
-                ct.delete()
+            val  f:Array<File>? =  file.listFiles()
+            if (f != null){
+                for (ct: File in f) {
+                    ct.delete()
+                }
             }
         }
     }
@@ -1058,6 +1061,7 @@ object Util {
         WorkManager
             .getInstance(context)
             .enqueueUniquePeriodicWork("Gps-Work", ExistingPeriodicWorkPolicy.KEEP, locationWorker)
+        toastMensaje(context,"Servicio Gps Activado")
     }
 
     fun closeGpsWork(context: Context) {
