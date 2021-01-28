@@ -736,8 +736,8 @@ object Util {
     @Throws(IOException::class)
     fun deleteDirectory(file: File) {
         if (file.isDirectory) {
-            val  f:Array<File>? =  file.listFiles()
-            if (f != null){
+            val f: Array<File>? = file.listFiles()
+            if (f != null) {
                 for (ct: File in f) {
                     ct.delete()
                 }
@@ -1060,8 +1060,8 @@ object Util {
                 .build()
         WorkManager
             .getInstance(context)
-            .enqueueUniquePeriodicWork("Gps-Work", ExistingPeriodicWorkPolicy.KEEP, locationWorker)
-        toastMensaje(context,"Servicio Gps Activado")
+            .enqueueUniquePeriodicWork("Gps-Work", ExistingPeriodicWorkPolicy.REPLACE, locationWorker)
+        toastMensaje(context, "Servicio Gps Activado")
     }
 
     fun closeGpsWork(context: Context) {
