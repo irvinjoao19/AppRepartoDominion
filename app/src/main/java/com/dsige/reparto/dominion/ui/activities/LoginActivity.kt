@@ -79,7 +79,7 @@ class LoginActivity : DaggerAppCompatActivity(), View.OnClickListener {
     lateinit var viewModelFactory: ViewModelFactory
     lateinit var usuarioViewModel: UsuarioViewModel
     lateinit var builder: AlertDialog.Builder
-    var dialog: AlertDialog? = null
+    private var dialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

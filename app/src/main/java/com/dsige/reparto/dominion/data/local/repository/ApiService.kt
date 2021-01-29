@@ -33,6 +33,7 @@ interface ApiService {
     @POST("SaveEstadoMovil")
     fun saveEstadoMovil(@Body movil: RequestBody): Call<Mensaje>
 
+    @Headers("Cache-Control: no-cache")
     @POST("SaveGpsOperario")
     fun saveOperarioGps(@Body gps: RequestBody): Observable<Mensaje>
 }

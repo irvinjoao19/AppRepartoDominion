@@ -7,22 +7,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.dsige.reparto.dominion.data.local.model.*
-import com.google.gson.Gson
 import com.dsige.reparto.dominion.data.local.repository.ApiError
 import com.dsige.reparto.dominion.data.local.repository.AppRepository
-import com.dsige.reparto.dominion.helper.Mensaje
 import com.dsige.reparto.dominion.helper.Util
 import com.jakewharton.retrofit2.adapter.rxjava2.HttpException
 import io.reactivex.CompletableObserver
-import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import okhttp3.MediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -43,7 +36,6 @@ internal constructor(private val roomRepository: AppRepository, private val retr
 
     fun getLogin(usuario: String, pass: String, imei: String, version: String, token: String) {
         roomRepository.getUsuarioService(usuario, pass, imei, version, token)
-            .delay(1000, TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Usuario> {
@@ -73,7 +65,6 @@ internal constructor(private val roomRepository: AppRepository, private val retr
 
     fun insertUsuario(u: Usuario, v: String) {
         roomRepository.insertUsuario(u)
-            .delay(3, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : CompletableObserver {
@@ -88,43 +79,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             })
     }
 
-    fun logout(login: String) {
-        deleteUser(login)
-//        var mensaje = ""
-//        roomRepository.getLogout(login)
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(object : Observer<Mensaje> {
-//                override fun onSubscribe(d: Disposable) {
-//
-//                }
-//
-//                override fun onNext(m: Mensaje) {
-//                    mensaje = m.mensaje
-//                }
-//
-//                override fun onError(t: Throwable) {
-//                    if (t is HttpException) {
-//                        val body = t.response().errorBody()
-//                        try {
-//                            val error = retrofit.errorConverter.convert(body!!)
-//                            mensajeError.postValue(error.Message)
-//                        } catch (e1: IOException) {
-//                            e1.printStackTrace()
-//                        }
-//                    } else {
-//                        mensajeError.postValue(t.message)
-//                    }
-//                }
-//
-//                override fun onComplete() {
-//                    deleteUser(mensaje)
-//                }
-//            })
-    }
-
-
-    private fun deleteUser(mensaje: String) {
+    fun logout() {
         roomRepository.deleteSesion()
             .delay(2, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.computation())

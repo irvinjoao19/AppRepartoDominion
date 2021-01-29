@@ -188,7 +188,7 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
                         logout = "on"
                         Util.closeGpsWork(this)
                         load("Cerrando Session")
-                        usuarioViewModel.logout(usuarioId.toString())
+                        usuarioViewModel.logout()
                     }
                 }
                 dialog.dismiss()

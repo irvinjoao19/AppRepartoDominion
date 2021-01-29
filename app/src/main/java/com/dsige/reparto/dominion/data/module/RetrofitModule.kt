@@ -2,6 +2,7 @@ package com.dsige.reparto.dominion.data.module
 
 import com.dsige.reparto.dominion.data.local.repository.*
 import com.dsige.reparto.dominion.data.local.AppDataBase
+import com.google.gson.GsonBuilder
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -37,7 +38,7 @@ class RetrofitModule {
 
     @Provides
     internal fun providesGsonConverterFactory(): GsonConverterFactory {
-        return GsonConverterFactory.create()
+        return GsonConverterFactory.create(GsonBuilder().setLenient().create())
     }
 
     @Provides
