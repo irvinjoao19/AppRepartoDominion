@@ -191,43 +191,48 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
 
     private fun saveRegistroReparto(r: Reparto) {
         val gps = Gps(this)
-        textView.text = r.Cliente_Reparto
-        textView1.text = r.Direccion_Reparto
-        textView2.text = r.CodigoBarra
-        textView3.text = r.Suministro_Medidor_reparto
-        repartoId = r.id_Reparto
-        direccion = r.Direccion_Reparto
-        barcode_code = r.Suministro_Numero_reparto
-        operarioId = r.id_Operario_Reparto
-        cliente = r.Cliente_Reparto
-        cardViewRegistro.visibility = View.GONE
-        validation = r.foto_Reparto
-        suministroReparto.text = String.format("Cuenta Contrato : %s", barcode_code)
+        if (gps.isLocationEnabled()) {
+            if (gps.latitude.toString() == "0.0" || gps.longitude.toString() == "0.0") {
+                gps.showAlert(this)
+                return
+            }
+            textView.text = r.Cliente_Reparto
+            textView1.text = r.Direccion_Reparto
+            textView2.text = r.CodigoBarra
+            textView3.text = r.Suministro_Medidor_reparto
+            repartoId = r.id_Reparto
+            direccion = r.Direccion_Reparto
+            barcode_code = r.Suministro_Numero_reparto
+            operarioId = r.id_Operario_Reparto
+            cliente = r.Cliente_Reparto
+            cardViewRegistro.visibility = View.GONE
+            validation = r.foto_Reparto
+            suministroReparto.text = String.format("Cuenta Contrato : %s", barcode_code)
+            val registro = Registro(
+                r.id_Reparto,
+                r.id_Operario_Reparto,
+                Util.getFechaActual(),
+                gps.latitude.toString(),
+                gps.longitude.toString(),
+                r.id_observacion.toString(),
+                if (validation == 0) 1 else 0
+            )
 
-        val registro = Registro(
-            r.id_Reparto,
-            r.id_Operario_Reparto,
-            Util.getFechaActual(),
-            gps.latitude.toString(),
-            gps.longitude.toString(),
-            r.id_observacion.toString(),
-            if (validation == 0) 1 else 0
-        )
+            repartoViewModel.saveReparto(registro)
+            cardViewDescripcion.visibility = View.VISIBLE
+            editTextCodigoBarra.text = null
+            Util.hideKeyboard(this)
 
-        repartoViewModel.saveReparto(registro)
-
-
-        cardViewDescripcion.visibility = View.VISIBLE
-        editTextCodigoBarra.text = null
-        Util.hideKeyboard(this)
-
-        if (validation != 0) {
-            bindListFoto(r.id_Reparto)
-            cardViewRegistro.visibility = View.VISIBLE
-            play_formulario.start()
-            editTextCodigoBarra.visibility = View.GONE
+            if (validation != 0) {
+                bindListFoto(r.id_Reparto)
+                cardViewRegistro.visibility = View.VISIBLE
+                play_formulario.start()
+                editTextCodigoBarra.visibility = View.GONE
+            } else {
+                play_normal.start()
+            }
         } else {
-            play_normal.start()
+            gps.showSettingsAlert(this)
         }
     }
 
