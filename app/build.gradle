@@ -76,19 +76,9 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava:2.4.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0'
-//    implementation 'com.github.nikartm:image-support:1.0.5'
-
-//    implementation 'com.getbase:floatingactionbutton:1.10.1'
-//    implementation "org.fabiomsr:moneytextview:1.1.0"
-//    implementation 'com.evrencoskun.library:tableview:0.8.8'
-//    implementation 'com.ekn.gruzer.gaugelibrary:gaugelibrary:0.2.2'
 
     // work manager
     implementation "androidx.work:work-runtime-ktx:2.4.0"
-
-//    implementation 'pl.pawelkleczkowski.customgauge:CustomGauge:1.0.4'
-    //socket
-    //implementation 'com.github.nkzawa:socket.io-client:0.5.0'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
