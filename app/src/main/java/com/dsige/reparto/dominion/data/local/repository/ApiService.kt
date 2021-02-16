@@ -27,8 +27,12 @@ interface ApiService {
     ): Observable<Sync>
 
     @Headers("Cache-Control: no-cache")
-    @POST("SaveNew")
-    fun sendRegistroRx(@Body query: RequestBody): Observable<Mensaje>
+    @POST("SaveRegistro")
+    fun sendRegistro(@Body query: RequestBody): Observable<Mensaje>
+
+    @Headers("Cache-Control: no-cache")
+    @POST("SavePhoto")
+    fun sendPhoto(@Body query: RequestBody): Observable<String>
 
     @POST("SaveEstadoMovil")
     fun saveEstadoMovil(@Body movil: RequestBody): Call<Mensaje>

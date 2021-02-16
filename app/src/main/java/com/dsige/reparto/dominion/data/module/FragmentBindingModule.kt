@@ -10,6 +10,9 @@ abstract class FragmentBindingModule {
     abstract class Main {
         @ContributesAndroidInjector
         internal abstract fun providMainFragment(): MainFragment
+
+        @ContributesAndroidInjector
+        internal abstract fun providSendFragment(): SendFragment
     }
 
     @Module

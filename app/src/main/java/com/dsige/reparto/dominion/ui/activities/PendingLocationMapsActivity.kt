@@ -32,7 +32,6 @@ import javax.inject.Inject
 class PendingLocationMapsActivity : DaggerAppCompatActivity(), OnMapReadyCallback, LocationListener,
     GoogleMap.OnMarkerClickListener {
 
-
     @Inject
     lateinit var viewModelFactory: ViewModelFactory
     lateinit var repartoViewModel: RepartoViewModel
@@ -91,7 +90,6 @@ class PendingLocationMapsActivity : DaggerAppCompatActivity(), OnMapReadyCallbac
         })
 
         mMap.setOnMarkerClickListener(this@PendingLocationMapsActivity)
-
     }
 
     private fun zoomToLocation(latitud: String, longitud: String) {
@@ -138,11 +136,11 @@ class PendingLocationMapsActivity : DaggerAppCompatActivity(), OnMapReadyCallbac
     }
 
     override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
+
     override fun onMarkerClick(p: Marker): Boolean {
         dialogResumen(p.title)
         return true
     }
-
 
     private fun dialogResumen(t: String) {
         val builder = android.app.AlertDialog.Builder(ContextThemeWrapper(this, R.style.AppTheme))

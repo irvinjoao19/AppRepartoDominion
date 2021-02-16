@@ -147,6 +147,10 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
         }
     }
 
+    override fun getPhotos(): LiveData<List<Photo>> {
+        return dataBase.photoDao().getPhotos()
+    }
+
     override fun getRegistroTask(): Observable<List<Registro>> {
         return Observable.create {
             val list = ArrayList<Registro>()
@@ -168,12 +172,16 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
         }
     }
 
-    override fun sendRegistroRx(body: RequestBody): Observable<Mensaje> {
-        return apiService.sendRegistroRx(body)
+    override fun getRegistros(): LiveData<List<Registro>> {
+        return dataBase.registroDao().getRegistros()
     }
 
     override fun closeRegistro(t: Mensaje): Completable {
         return Completable.fromAction {
+            val d: Registro? = dataBase.registroDao().getRegistroByIdTask(t.codigoBase)
+            if (d != null) {
+                dataBase.photoDao().closePhoto(d.iD_Suministro)
+            }
             dataBase.registroDao().closeRegistro(t.codigoBase)
         }
     }
@@ -251,5 +259,36 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
         return Completable.fromAction {
             dataBase.operarioGpsDao().updateEnabledGps(t.codigoBase)
         }
+    }
+
+    override fun getFiles(): Observable<List<String>> {
+        return Observable.create {
+            val files: ArrayList<String> = ArrayList()
+            val v: List<Registro> = dataBase.registroDao().getRegistroTask(1)
+            if (v.isNotEmpty()) {
+                for (r: Registro in v) {
+                    val recibo: Recibo? = dataBase.reciboDao().getReciboTaskByFk(r.id)
+                    if (recibo != null) {
+                        if (recibo.firmaCliente.isNotEmpty()) {
+                            files.add(recibo.firmaCliente)
+                        }
+                    }
+                    val photos = dataBase.photoDao().getPhotoByFk(r.iD_Suministro)
+                    for (p: Photo in photos) {
+                        files.add(p.rutaFoto)
+                    }
+                }
+            }
+            it.onNext(files)
+            it.onComplete()
+        }
+    }
+
+    override fun sendPhotos(body: RequestBody): Observable<String> {
+        return apiService.sendPhoto(body)
+    }
+
+    override fun sendRegistro(body: RequestBody): Observable<Mensaje> {
+        return apiService.sendRegistro(body)
     }
 }

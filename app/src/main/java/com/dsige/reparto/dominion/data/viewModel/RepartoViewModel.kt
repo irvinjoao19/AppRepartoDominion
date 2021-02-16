@@ -1,16 +1,27 @@
 package com.dsige.reparto.dominion.data.viewModel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.dsige.reparto.dominion.data.local.model.*
 import com.dsige.reparto.dominion.data.local.repository.*
+import com.dsige.reparto.dominion.helper.Mensaje
+import com.dsige.reparto.dominion.helper.Util
+import com.google.gson.Gson
+import com.jakewharton.retrofit2.adapter.rxjava2.HttpException
 import io.reactivex.CompletableObserver
 import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 
 class RepartoViewModel @Inject
@@ -194,6 +205,108 @@ internal constructor(private val roomRepository: AppRepository, private val retr
                 override fun onComplete() {
                     mensajeSuccess.value = "Ok"
                 }
+            })
+    }
+
+    fun getRegistros(): LiveData<List<Registro>> {
+        return roomRepository.getRegistros()
+    }
+
+    fun getPhotos(): LiveData<List<Photo>> {
+        return roomRepository.getPhotos()
+    }
+
+    fun sendFiles(context: Context) {
+        val files = roomRepository.getFiles()
+        files.flatMap { observable ->
+            Observable.fromIterable(observable).flatMap { a ->
+                val b = MultipartBody.Builder()
+                if (a.isNotEmpty()) {
+                    val file = File(Util.getFolder(context), a)
+                    if (file.exists()) {
+                        b.addFormDataPart(
+                            "fotos", file.name,
+                            RequestBody.create(
+                                MediaType.parse("multipart/form-data"), file
+                            )
+                        )
+                    }
+                }
+                b.setType(MultipartBody.FORM)
+                val body = b.build()
+                Observable.zip(
+                    Observable.just(a), roomRepository.sendPhotos(body), { _, mensaje ->
+                        mensaje
+                    })
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<String> {
+                override fun onSubscribe(d: Disposable) {}
+                override fun onNext(m: String) {
+                    Log.i("TAG", m)
+                }
+
+                override fun onError(e: Throwable) {
+                    if (e is HttpException) {
+                        val body = e.response().errorBody()
+                        try {
+                            val error = retrofit.errorConverter.convert(body!!)
+                            mensajeError.postValue(error!!.Message)
+                        } catch (e1: IOException) {
+                            e1.printStackTrace()
+                            Log.i("TAG", e1.toString())
+                        }
+                    } else {
+                        mensajeError.postValue(e.message)
+                    }
+                }
+
+                override fun onComplete() {
+                    sendDataTask()
+                }
+            })
+    }
+
+    private fun sendDataTask() {
+        val ots: Observable<List<Registro>> =
+            roomRepository.getRegistroTask()
+        ots.flatMap { observable ->
+            Observable.fromIterable(observable).flatMap { a ->
+                val json = Gson().toJson(a)
+                Log.i("TAG", json)
+                val body =
+                    RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
+                Observable.zip(
+                    Observable.just(a),
+                    roomRepository.sendRegistro(body), { _, m -> m })
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<Mensaje> {
+                override fun onComplete() {
+                    mensajeSuccess.value = "Datos Enviados"
+                }
+
+                override fun onSubscribe(d: Disposable) {}
+                override fun onError(t: Throwable) {
+                    mensajeError.value = t.message
+                }
+
+                override fun onNext(t: Mensaje) {
+                    updateEnabledReparto(t)
+                }
+            })
+    }
+
+    private fun updateEnabledReparto(t: Mensaje) {
+        roomRepository.closeRegistro(t)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : CompletableObserver {
+                override fun onSubscribe(d: Disposable) {}
+                override fun onComplete() {}
+                override fun onError(e: Throwable) {}
             })
     }
 }

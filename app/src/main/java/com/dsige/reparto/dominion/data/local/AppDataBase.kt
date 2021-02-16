@@ -19,7 +19,7 @@ import com.dsige.reparto.dominion.data.local.model.*
         Recibo::class,
         OperarioGps::class
     ],
-    version = 6, // version 1 en play store
+    version = 7, // version 1 en play store
     exportSchema = false
 )
 abstract class AppDataBase : RoomDatabase() {

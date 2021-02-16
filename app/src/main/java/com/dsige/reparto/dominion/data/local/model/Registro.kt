@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 @Entity
 open class Registro(
     var iD_Suministro: Int,
+    var iD_Registro: Int,
     var iD_Operario: Int,
     var registro_Fecha_SQLITE: String,
     var registro_Latitud: String,
@@ -17,7 +18,6 @@ open class Registro(
 
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0
-    var iD_Registro: Int = 0
     var suministro_Numero: Int = 0
     var iD_TipoLectura: Int = 0
     var registro_Lectura: String = ""

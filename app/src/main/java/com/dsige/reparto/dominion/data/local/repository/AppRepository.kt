@@ -33,9 +33,11 @@ interface AppRepository {
     fun saveReparto(r: Registro): Completable
     fun getPhotoReparto(id: Int, i: Int): LiveData<List<Photo>>
     fun getRegistroId(repartoId: Int): Observable<Int>
+    fun getPhotos(): LiveData<List<Photo>>
 
     fun getRegistroTask(): Observable<List<Registro>>
-    fun sendRegistroRx(body: RequestBody): Observable<Mensaje>
+    fun getRegistros(): LiveData<List<Registro>>
+
     fun closeRegistro(t: Mensaje): Completable
 
     fun getFormato(tipo: Int): LiveData<List<Formato>>
@@ -54,4 +56,10 @@ interface AppRepository {
     fun getSendGps(): Observable<List<OperarioGps>>
     fun saveOperarioGps(e: OperarioGps): Observable<Mensaje>
     fun updateEnabledGps(t: Mensaje): Completable
+
+    //envio
+    fun getFiles(): Observable<List<String>>
+    fun sendPhotos(body: RequestBody): Observable<String>
+    fun sendRegistro(body: RequestBody): Observable<Mensaje>
+
 }

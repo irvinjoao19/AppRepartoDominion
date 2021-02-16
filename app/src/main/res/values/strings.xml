@@ -193,4 +193,5 @@
     <string name="title_envio_pendientes">Envio de Pendientes</string>
     <string name="title_logout">Cerrar Sesión</string>
     <string name="title_main">Principal</string>
+    <string name="title_send">Enviar Registros</string>
 </resources>

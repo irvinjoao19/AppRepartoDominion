@@ -22,6 +22,9 @@ interface RegistroDao {
     @Query("SELECT * FROM Registro WHERE estado =:e")
     fun getRegistroTask(e:Int): List<Registro>
 
+    @Query("SELECT * FROM Registro WHERE estado = 1")
+    fun getRegistros(): LiveData<List<Registro>>
+
     @Query("DELETE FROM Registro")
     fun deleteAll()
 
@@ -34,11 +37,15 @@ interface RegistroDao {
     @Query("UPDATE Registro SET estado = 0 WHERE iD_Registro=:id")
     fun closeRegistro(id: Int)
 
+
     @Query("UPDATE Registro SET estado = 1 WHERE id=:id")
     fun activeRegistro(id: Int)
 
     @Query("SELECT * FROM Registro WHERE id=:i")
     fun getRegistroIdTask(i: Int): Registro
+
+    @Query("SELECT * FROM Registro WHERE iD_Registro=:i")
+    fun getRegistroByIdTask(i: Int): Registro
 
     @Query("SELECT * FROM Registro WHERE iD_Suministro=:i")
     fun getValidateRegistroIdTask(i: Int): Registro

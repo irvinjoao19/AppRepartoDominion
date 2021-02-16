@@ -21,6 +21,7 @@ import com.dsige.reparto.dominion.ui.fragments.MainFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.dsige.reparto.dominion.data.viewModel.ViewModelFactory
+import com.dsige.reparto.dominion.ui.fragments.SendFragment
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.toolbar
@@ -83,13 +84,19 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.title) {
-            "Sincronizar" -> dialogFunction(1, "Al sincronizar eliminando todo tus avances. Deseas Sincronizar ?")
+            "Sincronizar" -> dialogFunction(
+                1, "Al sincronizar eliminando todo tus avances. Deseas Sincronizar ?"
+            )
             "Inicio de Actividades" -> changeFragment(
                 MainFragment.newInstance(usuarioId), item.title.toString()
             )
-            "Envio de Pendientes" -> dialogFunction(2, "Enviar Pendientes ?")
+            "Envio de Pendientes" -> changeFragment(
+                SendFragment.newInstance("", ""), item.title.toString()
+            )
             "Servicio Gps" -> Util.executeGpsWork(this)
-            "Cerrar Sesión" -> dialogFunction(3, "Al cerrar Sesión estaras eliminando todo tus avances. \nDeseas Salir ?")
+            "Cerrar Sesión" -> dialogFunction(
+                3, "Al cerrar Sesión estaras eliminando todo tus avances. \nDeseas Salir ?"
+            )
         }
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
@@ -182,7 +189,11 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
                     }
                     2 -> {
                         Util.executeRepartoWork(this)
-                        Util.dialogMensaje(this,"Mensaje","Los registros se estan enviando en segundo plano asegure de tener buena señal.")
+                        Util.dialogMensaje(
+                            this,
+                            "Mensaje",
+                            "Los registros se estan enviando en segundo plano asegure de tener buena señal."
+                        )
                     }
                     3 -> {
                         logout = "on"

@@ -12,6 +12,7 @@ import com.dsige.reparto.dominion.data.local.repository.AppRepository
 import com.dsige.reparto.dominion.helper.Mensaje
 import com.dsige.reparto.dominion.helper.Util
 import com.google.gson.Gson
+import com.jakewharton.retrofit2.adapter.rxjava2.HttpException
 import io.reactivex.CompletableObserver
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -22,6 +23,7 @@ import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
+import java.io.IOException
 import java.util.ArrayList
 import javax.inject.Inject
 import javax.inject.Provider
@@ -32,7 +34,7 @@ internal constructor(
 ) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        sendReparto()
+        sendFiles(context)
         return Result.success()
     }
 
@@ -43,56 +45,53 @@ internal constructor(
         }
     }
 
-    private fun sendReparto() {
+    private fun sendFiles(context: Context) {
+        val files = roomRepository.getFiles()
+        files.flatMap { observable ->
+            Observable.fromIterable(observable).flatMap { a ->
+                val b = MultipartBody.Builder()
+                if (a.isNotEmpty()) {
+                    val file = File(Util.getFolder(context), a)
+                    if (file.exists()) {
+                        b.addFormDataPart(
+                            "fotos", file.name,
+                            RequestBody.create(
+                                MediaType.parse("multipart/form-data"), file
+                            )
+                        )
+                    }
+                }
+                b.setType(MultipartBody.FORM)
+                val body = b.build()
+                Observable.zip(
+                    Observable.just(a), roomRepository.sendPhotos(body), { _, mensaje ->
+                        mensaje
+                    })
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<String> {
+                override fun onSubscribe(d: Disposable) {}
+                override fun onNext(m: String) {}
+                override fun onError(e: Throwable) {}
+                override fun onComplete() {
+                    sendDataTask()
+                }
+            })
+    }
+
+    private fun sendDataTask() {
         val ots: Observable<List<Registro>> =
             roomRepository.getRegistroTask()
         ots.flatMap { observable ->
             Observable.fromIterable(observable).flatMap { a ->
-
-                val b = MultipartBody.Builder()
-                val filePaths: ArrayList<String> = ArrayList()
-
-                val recibo: Recibo? = a.recibo
-                if (recibo != null) {
-                    if (recibo.firmaCliente.isNotEmpty()) {
-                        val file = File(Util.getFolder(context), recibo.firmaCliente)
-                        if (file.exists()) {
-                            filePaths.add(file.toString())
-                        }
-                    }
-                }
-                val photos: List<Photo>? = a.photos
-                if (photos != null) {
-                    for (p: Photo in photos) {
-                        if (p.rutaFoto.isNotEmpty()) {
-                            val file = File(Util.getFolder(context), p.rutaFoto)
-                            if (file.exists()) {
-                                filePaths.add(file.toString())
-                            }
-                        }
-                    }
-                }
-
-                for (i in 0 until filePaths.size) {
-                    val file = File(filePaths[i])
-                    b.addFormDataPart(
-                        "fotos",
-                        file.name,
-                        RequestBody.create(MediaType.parse("multipart/form-data"), file)
-                    )
-                }
-
                 val json = Gson().toJson(a)
                 Log.i("TAG", json)
-                b.setType(MultipartBody.FORM)
-                b.addFormDataPart("model", json)
-                val requestBody = b.build()
+                val body =
+                    RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
                 Observable.zip(
                     Observable.just(a),
-                    roomRepository.sendRegistroRx(requestBody),
-                    { _, mensaje ->
-                        mensaje
-                    })
+                    roomRepository.sendRegistro(body), { _, m -> m })
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

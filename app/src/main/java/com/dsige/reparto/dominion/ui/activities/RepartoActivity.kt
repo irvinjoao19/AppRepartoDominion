@@ -210,6 +210,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
             suministroReparto.text = String.format("Cuenta Contrato : %s", barcode_code)
             val registro = Registro(
                 r.id_Reparto,
+                r.id_Reparto,
                 r.id_Operario_Reparto,
                 Util.getFechaActual(),
                 gps.latitude.toString(),
