@@ -17,7 +17,7 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.dsige.reparto.dominion.R
-import com.dsige.reparto.dominion.helper.FetchURL
+import com.dsige.reparto.dominion.helper.FetchUrl
 import com.dsige.reparto.dominion.helper.TaskLoadedCallback
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -127,8 +127,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
 
 
     private fun isGPSEnabled() {
-        val gpsSignal = Settings.Secure.getInt(this.contentResolver, Settings.Secure.LOCATION_MODE)
-        if (gpsSignal == 0) {
+        val gpsSignal = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        if (!gpsSignal) {
             showInfoAlert()
         }
     }
@@ -152,26 +152,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
         currentPolyline = mMap.addPolyline(values[0] as PolylineOptions)
     }
 
-    private fun getUrl(origin: LatLng, dest: LatLng, directionMode: String): String {
-        val str_origin = "origin=" + origin.latitude + "," + origin.longitude
-        val str_dest = "destination=" + dest.latitude + "," + dest.longitude
-        val mode = "mode=$directionMode"
-        val parameters = "$str_origin&$str_dest&$mode"
+
+    private fun getUrl(origin: LatLng, dest: LatLng): String {
+        val strOrigin = "origin=" + origin.latitude + "," + origin.longitude
+        val strDest = "destination=" + dest.latitude + "," + dest.longitude
+        val mode = "mode=driving"
+        val parameters = "$strOrigin&$strDest&$mode"
         val output = "json"
-        return "https://maps.googleapis.com/maps/api/directions/$output?$parameters&key=" + getString(
-            R.string.google_maps_key
-        )
+        return "https://maps.googleapis.com/maps/api/directions/" +
+                "$output?" +
+                "$parameters&key=" +
+                getString(R.string.google_maps_key)
     }
 
     override fun onLocationChanged(location: Location) {
+
         if (isFirstTime) {
             zoomToLocation(location)
-            place1 =
-                MarkerOptions().position(LatLng(location.latitude, location.longitude)).title("YO")
-            place2 = MarkerOptions().position(LatLng(latitud.toDouble(), longitud.toDouble()))
-                .title(title)
-            FetchURL(this).execute(getUrl(place1.position, place2.position, "driving"), "driving")
+            place1 = MarkerOptions().position(LatLng(location.latitude, location.longitude)).title("YO")
+            place2 = MarkerOptions().position(LatLng(latitud.toDouble(), longitud.toDouble())).title(title)
             isFirstTime = false
+            FetchUrl(getUrl(place1.position, place2.position), "driving", this)
         }
     }
 

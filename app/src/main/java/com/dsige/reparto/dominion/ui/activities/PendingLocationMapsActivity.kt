@@ -103,14 +103,9 @@ class PendingLocationMapsActivity : DaggerAppCompatActivity(), OnMapReadyCallbac
     }
 
     private fun isGPSEnabled() {
-        try {
-            val gpsSignal =
-                Settings.Secure.getInt(this.contentResolver, Settings.Secure.LOCATION_MODE)
-            if (gpsSignal == 0) {
-                showInfoAlert()
-            }
-        } catch (e: Settings.SettingNotFoundException) {
-            e.printStackTrace()
+        val gpsSignal = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        if (!gpsSignal) {
+            showInfoAlert()
         }
     }
 

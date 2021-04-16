@@ -44,5 +44,4 @@ class AutoFitTextureView @JvmOverloads constructor(
             }
         }
     }
-
 }

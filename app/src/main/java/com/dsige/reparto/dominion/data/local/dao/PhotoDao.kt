@@ -35,7 +35,7 @@ interface PhotoDao {
     fun getPhotoByFk(id: Int): List<Photo>
 
     @Query("SELECT * FROM Photo WHERE rutaFoto =:img")
-    fun getPhotoByName(img: String): Photo
+    fun getPhotoByName(img: String): Photo?
 
     @Query("SELECT * FROM Photo WHERE estado = 1")
     fun getPhotos(): LiveData<List<Photo>>

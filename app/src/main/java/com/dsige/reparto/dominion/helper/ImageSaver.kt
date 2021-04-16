@@ -21,7 +21,6 @@ internal class ImageSaver(
          */
         private val fechaAsignacion: String,
         private val direccion: String,
-        private val distrito: String,
         private val context: Context
 ) : Runnable {
 
@@ -34,7 +33,7 @@ internal class ImageSaver(
             output = FileOutputStream(file).apply {
                 write(bytes)
             }
-            Util.getAngleImage(context,file.absolutePath, fechaAsignacion,direccion,distrito)
+            Util.getAngleImage(context,file.absolutePath, fechaAsignacion,direccion)
         } catch (e: IOException) {
             Log.e(TAG, e.toString())
         } finally {

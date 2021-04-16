@@ -6,8 +6,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
-import android.location.Address
-import android.location.Geocoder
 import android.media.ImageReader
 import android.os.Bundle
 import android.os.Handler
@@ -19,15 +17,9 @@ import android.util.SparseIntArray
 import android.view.*
 import androidx.fragment.app.Fragment
 import com.dsige.reparto.dominion.R
-import com.dsige.reparto.dominion.helper.Gps
 import com.dsige.reparto.dominion.helper.ImageSaver
 import com.dsige.reparto.dominion.helper.Util
 import com.dsige.reparto.dominion.ui.activities.PreviewCameraActivity
-import io.reactivex.Observable
-import io.reactivex.Observer
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
 import java.lang.Long.signum
@@ -36,6 +28,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.math.sqrt
+
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -50,7 +43,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
             val manager = activity!!.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             val characteristics = manager.getCameraCharacteristics(cameraId)
             val maxzoom =
-                    (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM))!! * 10
+                (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM))!! * 10
 
             val m: Rect? = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
 //            val action = event.action
@@ -88,7 +81,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
 
             try {
                 captureSession!!
-                        .setRepeatingRequest(previewRequestBuilder.build(), captureCallback, null)
+                    .setRepeatingRequest(previewRequestBuilder.build(), captureCallback, null)
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
             } catch (ex: NullPointerException) {
@@ -147,6 +140,8 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
     private var finger_spacing: Float = 0.toFloat()
     private var zoom_level = 1
     private var zoom: Rect? = null
+
+    private var resultPhoto: Int = 1
 
     /**
      * Flash Type
@@ -223,7 +218,16 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
      * still image is ready to be saved.
      */
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener {
-        backgroundHandler?.post(ImageSaver(it.acquireNextImage(), file, Util.getFecha(), direccion, distrito, context!!))
+
+        backgroundHandler?.post(
+            ImageSaver(
+                it.acquireLatestImage(),
+                file,
+                Util.getFecha(),
+                direccion,
+                requireContext()
+            )
+        )
     }
 
     /**
@@ -271,8 +275,8 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
                     // CONTROL_AE_STATE can be null on some devices
                     val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
                     if (aeState == null ||
-                            aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
-                            aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED
+                        aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
+                        aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED
                     ) {
                         state = STATE_WAITING_NON_PRECAPTURE
                     }
@@ -293,7 +297,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
             if (afState == null) {
                 captureStillPicture()
             } else if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED
-                    || afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED
+                || afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED
             ) {
                 // CONTROL_AE_STATE can be null on some devices
                 val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
@@ -307,13 +311,13 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         }
 
         override fun onCaptureProgressed(
-                session: CameraCaptureSession, request: CaptureRequest, partialResult: CaptureResult
+            session: CameraCaptureSession, request: CaptureRequest, partialResult: CaptureResult
         ) {
             process(partialResult)
         }
 
         override fun onCaptureCompleted(
-                session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult
+            session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult
         ) {
             process(result)
         }
@@ -324,20 +328,19 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
     private var nameImg = ""
     private var tipo = 0
     private var direccion: String = ""
-    private var distrito: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             repartoId = it.getInt(ARG_PARAM1)
             tipo = it.getInt(ARG_PARAM2)
-            cuentaContrato = it.getString(ARG_PARAM3)!!
-            direccion = it.getString(ARG_PARAM4)!!
+            cuentaContrato = it.getString(ARG_PARAM3, "")
+            direccion = it.getString(ARG_PARAM4, "")
         }
     }
 
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.fragment_camera, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -351,37 +354,37 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         nameImg = Util.getFechaActualForPhoto(cuentaContrato, 5) + ".jpg"
         file = File(Util.getFolder(context!!), nameImg)
 
-        val gps = Gps(context!!)
-        if (gps.isLocationEnabled()) {
-            try {
-                val addressObservable = Observable.just(
-                        Geocoder(context)
-                                .getFromLocation(
-                                        gps.getLatitude(), gps.getLongitude(), 1
-                                )[0]
-                )
-                addressObservable.subscribeOn(Schedulers.io())
-                        .delay(1000, TimeUnit.MILLISECONDS)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(object : Observer<Address> {
-                            override fun onSubscribe(d: Disposable) {}
-                            override fun onNext(address: Address) {
-                                direccion = address.getAddressLine(0).toString()
-                                distrito = address.locality.toString()
-                            }
-
-                            override fun onError(e: Throwable) {
-                                Util.toastMensaje(context!!, "Volver activar el Gps")
-                            }
-
-                            override fun onComplete() {}
-                        })
-            } catch (e: Exception) {
-                Util.toastMensaje(context!!, "Volver activar el Gps")
-            }
-        } else {
-            gps.showSettingsAlert(context!!)
-        }
+//        val gps = Gps(context!!)
+//        if (gps.isLocationEnabled()) {
+//            try {
+//                val addressObservable = Observable.just(
+//                        Geocoder(context)
+//                                .getFromLocation(
+//                                        gps.getLatitude(), gps.getLongitude(), 1
+//                                )[0]
+//                )
+//                addressObservable.subscribeOn(Schedulers.io())
+//                        .delay(1000, TimeUnit.MILLISECONDS)
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe(object : Observer<Address> {
+//                            override fun onSubscribe(d: Disposable) {}
+//                            override fun onNext(address: Address) {
+//                                direccion = address.getAddressLine(0).toString()
+//                                distrito = address.locality.toString()
+//                            }
+//
+//                            override fun onError(e: Throwable) {
+//                                Util.toastMensaje(context!!, "Volver activar el Gps")
+//                            }
+//
+//                            override fun onComplete() {}
+//                        })
+//            } catch (e: Exception) {
+//                Util.toastMensaje(context!!, "Volver activar el Gps")
+//            }
+//        } else {
+//            gps.showSettingsAlert(context!!)
+//        }
     }
 
     override fun onResume() {
@@ -415,37 +418,38 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
                 // We don't use a front facing camera in this sample.
                 val cameraDirection = characteristics.get(CameraCharacteristics.LENS_FACING)
                 if (cameraDirection != null &&
-                        cameraDirection == CameraCharacteristics.LENS_FACING_FRONT
+                    cameraDirection == CameraCharacteristics.LENS_FACING_FRONT
                 ) {
                     continue
                 }
 
                 val map = characteristics.get(
-                        CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
                 ) ?: continue
 
                 // For still image captures, we use the largest available size.
                 val largest = Collections.max(
-                        listOf(*map.getOutputSizes(ImageFormat.JPEG)),
-                        CompareSizesByArea()
+                    listOf(*map.getOutputSizes(ImageFormat.JPEG)),
+                    CompareSizesByArea()
                 )
                 imageReader = ImageReader.newInstance(
 //                        largest.width, largest.height,
-                        640, 480,
-                        ImageFormat.JPEG, /*maxImages*/ 1
+                    640, 480,
+                    ImageFormat.JPEG, /*maxImages*/ 2
                 ).apply {
                     setOnImageAvailableListener(onImageAvailableListener, backgroundHandler)
                 }
 
                 // Find out if we need to swap dimension to get the preview size relative to sensor
                 // coordinate.
-                val displayRotation = activity!!.windowManager.defaultDisplay.rotation
+                val displayRotation = requireContext().display?.rotation
 
                 sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                 val swappedDimensions = areDimensionsSwapped(displayRotation)
 
                 val displaySize = Point()
-                activity!!.windowManager.defaultDisplay.getSize(displaySize)
+                requireActivity().windowManager.currentWindowMetrics.bounds
+//                activity!!.windowManager.defaultDisplay.getSize(displaySize)
                 val rotatedPreviewWidth = if (swappedDimensions) height else width
                 val rotatedPreviewHeight = if (swappedDimensions) width else height
                 var maxPreviewWidth = if (swappedDimensions) displaySize.y else displaySize.x
@@ -458,10 +462,10 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
                 previewSize = chooseOptimalSize(
-                        map.getOutputSizes(SurfaceTexture::class.java),
-                        rotatedPreviewWidth, rotatedPreviewHeight,
-                        maxPreviewWidth, maxPreviewHeight,
-                        largest
+                    map.getOutputSizes(SurfaceTexture::class.java),
+                    rotatedPreviewWidth, rotatedPreviewHeight,
+                    maxPreviewWidth, maxPreviewHeight,
+                    largest
                 )
 
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
@@ -473,7 +477,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
 
                 // Check if the flash is supported.
                 flashSupported =
-                        characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+                    characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
 
                 this.cameraId = cameraId
 
@@ -500,7 +504,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
      *
      * @return true if the dimensions are swapped, false otherwise.
      */
-    private fun areDimensionsSwapped(displayRotation: Int): Boolean {
+    private fun areDimensionsSwapped(displayRotation: Int?): Boolean {
         var swappedDimensions = false
         when (displayRotation) {
             Surface.ROTATION_0, Surface.ROTATION_180 -> {
@@ -601,46 +605,45 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
 
             // We set up a CaptureRequest.Builder with the output Surface.
             previewRequestBuilder = cameraDevice!!.createCaptureRequest(
-                    CameraDevice.TEMPLATE_PREVIEW
+                CameraDevice.TEMPLATE_PREVIEW
             )
             previewRequestBuilder.addTarget(surface)
 
-            // Here, we create a CameraCaptureSession for camera preview.
             cameraDevice?.createCaptureSession(
-                    listOf(surface, imageReader?.surface),
-                    object : CameraCaptureSession.StateCallback() {
+                listOf(surface, imageReader?.surface),
+                object : CameraCaptureSession.StateCallback() {
 
-                        override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                            // The camera is already closed
-                            if (cameraDevice == null) return
+                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                        // The camera is already closed
+                        if (cameraDevice == null) return
 
-                            // When the session is ready, we start displaying the preview.
-                            captureSession = cameraCaptureSession
-                            try {
-                                // Auto focus should be continuous for camera preview.
-                                previewRequestBuilder.set(
-                                        CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
-                                )
-                                // Flash is automatically enabled when necessary.
-                                setAutoFlash(previewRequestBuilder)
+                        // When the session is ready, we start displaying the preview.
+                        captureSession = cameraCaptureSession
+                        try {
+                            // Auto focus should be continuous for camera preview.
+                            previewRequestBuilder.set(
+                                CaptureRequest.CONTROL_AF_MODE,
+                                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                            )
+                            // Flash is automatically enabled when necessary.
+                            setAutoFlash(previewRequestBuilder)
 
-                                // Finally, we start displaying the camera preview.
-                                previewRequest = previewRequestBuilder.build()
-                                captureSession?.setRepeatingRequest(
-                                        previewRequest,
-                                        captureCallback, backgroundHandler
-                                )
-                            } catch (e: CameraAccessException) {
-                                Log.e(TAG, e.toString())
-                            }
-
+                            // Finally, we start displaying the camera preview.
+                            previewRequest = previewRequestBuilder.build()
+                            captureSession?.setRepeatingRequest(
+                                previewRequest,
+                                captureCallback, backgroundHandler
+                            )
+                        } catch (e: CameraAccessException) {
+                            Log.e(TAG, e.toString())
                         }
 
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                            Util.toastMensaje(context!!, "Failed")
-                        }
-                    }, null
+                    }
+
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        Util.toastMensaje(context!!, "Failed")
+                    }
+                }, null
             )
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
@@ -658,7 +661,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
      */
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
         activity ?: return
-        val rotation = activity!!.windowManager.defaultDisplay.rotation
+        val rotation = requireContext().display?.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
         val bufferRect = RectF(0f, 0f, previewSize.height.toFloat(), previewSize.width.toFloat())
@@ -668,7 +671,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
             val scale =
-                    (viewHeight.toFloat() / previewSize.height).coerceAtLeast(viewWidth.toFloat() / previewSize.width)
+                (viewHeight.toFloat() / previewSize.height).coerceAtLeast(viewWidth.toFloat() / previewSize.width)
             with(matrix) {
                 setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
                 postScale(scale, scale, centerX, centerY)
@@ -687,15 +690,15 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         try {
             // This is how to tell the camera to lock focus.
             previewRequestBuilder.set(
-                    CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_START
+                CaptureRequest.CONTROL_AF_TRIGGER,
+                CameraMetadata.CONTROL_AF_TRIGGER_START
             )
             // Tell #captureCallback to wait for the lock.
             state = STATE_WAITING_LOCK
 
             captureSession?.capture(
-                    previewRequestBuilder.build(), captureCallback,
-                    backgroundHandler
+                previewRequestBuilder.build(), captureCallback,
+                backgroundHandler
             )
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
@@ -710,15 +713,15 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         try {
             // This is how to tell the camera to trigger.
             previewRequestBuilder.set(
-                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
-                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START
+                CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
+                CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START
             )
             // Tell #captureCallback to wait for the precapture sequence to be set.
             state = STATE_WAITING_PRECAPTURE
 
             captureSession?.capture(
-                    previewRequestBuilder.build(), captureCallback,
-                    backgroundHandler
+                previewRequestBuilder.build(), captureCallback,
+                backgroundHandler
             )
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
@@ -732,11 +735,10 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
     private fun captureStillPicture() {
         try {
             if (activity == null || cameraDevice == null) return
-            val rotation = activity!!.windowManager.defaultDisplay.rotation
-
+            val rotation = requireContext().display?.rotation
             // This is the CaptureRequest.Builder that we use to take a picture.
             val captureBuilder = cameraDevice?.createCaptureRequest(
-                    CameraDevice.TEMPLATE_STILL_CAPTURE
+                CameraDevice.TEMPLATE_STILL_CAPTURE
             )?.apply {
                 addTarget(imageReader!!.surface)
 
@@ -745,36 +747,40 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
                 // For devices with orientation of 90, we return our mapping from ORIENTATIONS.
                 // For devices with orientation of 270, we need to rotate the JPEG 180 degrees.
                 set(
-                        CaptureRequest.JPEG_ORIENTATION,
-                        (ORIENTATIONS.get(rotation) + sensorOrientation + 270) % 360
+                    CaptureRequest.JPEG_ORIENTATION,
+                    (ORIENTATIONS.get(rotation!!) + sensorOrientation + 270) % 360
                 )
 
                 // Use the same AE and AF modes as the preview.
                 set(
-                        CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                    CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
                 )
             }?.also { setAutoFlash(it) }
 
             val captureCallback = object : CameraCaptureSession.CaptureCallback() {
 
                 override fun onCaptureCompleted(
-                        session: CameraCaptureSession,
-                        request: CaptureRequest,
-                        result: TotalCaptureResult
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    result: TotalCaptureResult
                 ) {
                     unlockFocus()
-                    Looper.myLooper()?.let {
-                        Handler(it).postDelayed({
-                            startActivity(
-                                Intent(context!!, PreviewCameraActivity::class.java)
-                                    .putExtra("repartoId", repartoId)
-                                    .putExtra("nameImg", nameImg)
-                                    .putExtra("tipo", tipo)
-                            )
-                            activity!!.finish()
-                        }, 700)
+                    if (resultPhoto == 1) {
+
+                        Looper.myLooper()?.let {
+                            Handler(it).postDelayed({
+                                startActivity(
+                                    Intent(requireContext(), PreviewCameraActivity::class.java)
+                                        .putExtra("repartoId", repartoId)
+                                        .putExtra("nameImg", nameImg)
+                                        .putExtra("tipo", tipo)
+                                )
+                                requireActivity().finish()
+                            }, 700)
+                        }
                     }
+                    resultPhoto++
                 }
             }
 
@@ -797,19 +803,19 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         try {
             // Reset the auto-focus trigger
             previewRequestBuilder.set(
-                    CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL
+                CaptureRequest.CONTROL_AF_TRIGGER,
+                CameraMetadata.CONTROL_AF_TRIGGER_CANCEL
             )
             setAutoFlash(previewRequestBuilder)
             captureSession?.capture(
-                    previewRequestBuilder.build(), captureCallback,
-                    backgroundHandler
+                previewRequestBuilder.build(), captureCallback,
+                backgroundHandler
             )
             // After this, the camera will go back to the normal state of preview.
             state = STATE_PREVIEW
             captureSession?.setRepeatingRequest(
-                    previewRequest, captureCallback,
-                    backgroundHandler
+                previewRequest, captureCallback,
+                backgroundHandler
             )
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
@@ -826,33 +832,27 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
         when (flashType) {
             1 -> {
                 requestBuilder.set(
-                        CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
                 )
             }
             2 -> {
                 requestBuilder.set(
-                        CaptureRequest.CONTROL_AE_MODE,
-                        CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH
                 )
             }
             3 -> {
                 requestBuilder.set(
-                        CaptureRequest.CONTROL_AE_MODE,
-                        CameraMetadata.CONTROL_AE_MODE_ON
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CameraMetadata.CONTROL_AE_MODE_ON
                 )
             }
         }
     }
 
     companion object {
-
-        /**
-         * Conversion from screen rotation to JPEG orientation.
-         */
         private val ORIENTATIONS = SparseIntArray()
-        private val FRAGMENT_DIALOG = "dialog"
-
         init {
             ORIENTATIONS.append(Surface.ROTATION_0, 90)
             ORIENTATIONS.append(Surface.ROTATION_90, 0)
@@ -918,7 +918,12 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
          */
         @JvmStatic
         private fun chooseOptimalSize(
-                choices: Array<Size>, textureViewWidth: Int, textureViewHeight: Int, maxWidth: Int, maxHeight: Int, aspectRatio: Size
+            choices: Array<Size>,
+            textureViewWidth: Int,
+            textureViewHeight: Int,
+            maxWidth: Int,
+            maxHeight: Int,
+            aspectRatio: Size
         ): Size {
 
             // Collect the supported resolutions that are at least as big as the preview Surface
@@ -929,7 +934,7 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
             val h = aspectRatio.height
             for (option in choices) {
                 if (option.width <= maxWidth && option.height <= maxHeight &&
-                        option.height == option.width * h / w
+                    option.height == option.width * h / w
                 ) {
                     if (option.width >= textureViewWidth && option.height >= textureViewHeight) {
                         bigEnough.add(option)
@@ -953,22 +958,22 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener {
 
 
         @JvmStatic
-        fun newInstance(p1: Int, p2: Int, p3: String,p4:String) =
-                CameraFragment().apply {
-                    arguments = Bundle().apply {
-                        putInt(ARG_PARAM1, p1)
-                        putInt(ARG_PARAM2, p2)
-                        putString(ARG_PARAM3, p3)
-                        putString(ARG_PARAM4, p4)
-                    }
+        fun newInstance(p1: Int, p2: Int, p3: String, p4: String) =
+            CameraFragment().apply {
+                arguments = Bundle().apply {
+                    putInt(ARG_PARAM1, p1)
+                    putInt(ARG_PARAM2, p2)
+                    putString(ARG_PARAM3, p3)
+                    putString(ARG_PARAM4, p4)
                 }
+            }
     }
 
     internal class CompareSizesByArea : Comparator<Size> {
 
         // We cast here to ensure the multiplications won't overflow
         override fun compare(lhs: Size, rhs: Size) =
-                signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
+            signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
 
     }
 }

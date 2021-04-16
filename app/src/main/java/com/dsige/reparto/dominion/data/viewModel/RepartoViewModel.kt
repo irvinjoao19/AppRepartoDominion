@@ -309,4 +309,22 @@ internal constructor(private val roomRepository: AppRepository, private val retr
                 override fun onError(e: Throwable) {}
             })
     }
+
+    fun generarArchivo(nameImg: String, context: Context, direccion: String, latitud: String, longitud: String,id:Int) {
+        Util.getPhotoAdjunto(
+            nameImg, context,  direccion,
+            latitud, longitud, id
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<Photo> {
+                override fun onSubscribe(d: Disposable) {}
+                override fun onNext(t: Photo) {
+                    savePhotoReparto(t)
+                }
+
+                override fun onError(e: Throwable) {}
+                override fun onComplete() {}
+            })
+    }
 }

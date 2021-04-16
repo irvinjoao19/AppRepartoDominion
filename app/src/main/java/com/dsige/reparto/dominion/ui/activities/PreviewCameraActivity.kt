@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
@@ -50,7 +51,7 @@ class PreviewCameraActivity : DaggerAppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_preview_camera)
-
+        Log.i("TAG","INGRESO A PREVIEW")
         val b = intent.extras
         if (b != null) {
             repartoId = b.getInt("repartoId")

@@ -42,13 +42,13 @@ interface RegistroDao {
     fun activeRegistro(id: Int)
 
     @Query("SELECT * FROM Registro WHERE id=:i")
-    fun getRegistroIdTask(i: Int): Registro
+    fun getRegistroIdTask(i: Int): Registro?
 
     @Query("SELECT * FROM Registro WHERE iD_Registro=:i")
-    fun getRegistroByIdTask(i: Int): Registro
+    fun getRegistroByIdTask(i: Int): Registro?
 
     @Query("SELECT * FROM Registro WHERE iD_Suministro=:i")
-    fun getValidateRegistroIdTask(i: Int): Registro
+    fun getValidateRegistroIdTask(i: Int): Registro?
 
 
 }

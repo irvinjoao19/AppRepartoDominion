@@ -26,10 +26,10 @@ interface ReciboDao {
     fun deleteAll()
 
     @Query("SELECT * FROM Recibo WHERE reciboId =:id")
-    fun getReciboById(id: Int): Recibo
+    fun getReciboById(id: Int): Recibo?
 
     @Query("SELECT * FROM Recibo WHERE repartoId =:id")
-    fun getReciboTaskByFk(id: Int): Recibo
+    fun getReciboTaskByFk(id: Int): Recibo?
 
     @Query("SELECT * FROM Recibo WHERE repartoId =:id")
     fun getReciboByFk(id: Int): LiveData<Recibo>

@@ -18,8 +18,8 @@ class CameraActivity : AppCompatActivity() {
                     CameraFragment.newInstance(
                         b.getInt("repartoId"),
                         b.getInt("tipo"),
-                        b.getString("cuentaContrato")!!,
-                        b.getString("direccion")!!
+                        b.getString("cuentaContrato",""),
+                        b.getString("direccion","")
                     )
                 )
                 .commit()

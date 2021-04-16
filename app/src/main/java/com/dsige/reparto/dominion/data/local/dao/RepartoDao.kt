@@ -32,7 +32,7 @@ interface RepartoDao {
     fun getRepartoById(id: Int): LiveData<Reparto>
 
     @Query("SELECT * FROM Reparto WHERE Suministro_Numero_reparto =:barCode AND activo=:i ")
-    fun getCodigoBarra(barCode: String, i: Int): Reparto
+    fun getCodigoBarra(barCode: String, i: Int): Reparto?
 
     @Query("UPDATE Reparto SET activo = 0 WHERE id_Reparto =:id")
     fun disableReparto(id: Int)

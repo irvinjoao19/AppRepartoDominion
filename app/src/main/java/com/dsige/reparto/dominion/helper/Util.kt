@@ -18,6 +18,8 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.Html
 import android.text.Spanned
+import android.text.TextPaint
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -26,13 +28,17 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
-import androidx.work.*
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.dsige.reparto.dominion.BuildConfig
 import com.dsige.reparto.dominion.R
+import com.dsige.reparto.dominion.data.local.model.Photo
 import com.dsige.reparto.dominion.ui.workManager.GpsWork
 import com.dsige.reparto.dominion.ui.workManager.RepartoWork
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -225,25 +231,6 @@ object Util {
         return folder
     }
 
-    // TODO SOBRE FOTO
-
-    fun generateImageAsync(pathFile: String): Observable<Boolean> {
-        return Observable.create { e ->
-            e.onNext(comprimirImagen(pathFile))
-            e.onComplete()
-        }
-    }
-
-    private fun comprimirImagen(PathFile: String): Boolean {
-        return try {
-            val result = getRightAngleImage(PathFile)
-            result == PathFile
-        } catch (ex: Exception) {
-            Log.i("exception", ex.message!!)
-            false
-        }
-    }
-
     private fun getDateTimeFormatString(date: Date): String {
         @SuppressLint("SimpleDateFormat") val df = SimpleDateFormat("dd/MM/yyyy - hh:mm:ss a")
         return df.format(date)
@@ -255,274 +242,26 @@ object Util {
         return df.format(date)
     }
 
-    private fun processingBitmapSetDateTime(bm1: Bitmap?, captionString: String?): Bitmap? {
-        //Bitmap bm1 = null;
-        var newBitmap: Bitmap? = null
-        try {
 
-            var config: Bitmap.Config? = bm1!!.config
-            if (config == null) {
-                config = Bitmap.Config.ARGB_8888
-            }
-            newBitmap = Bitmap.createBitmap(bm1.width, bm1.height, config)
-
-            val newCanvas = Canvas(newBitmap!!)
-            newCanvas.drawBitmap(bm1, 0f, 0f, null)
-
-            if (captionString != null) {
-
-                val paintText = Paint(Paint.ANTI_ALIAS_FLAG)
-                paintText.color = Color.RED
-                paintText.textSize = 22f
-                paintText.style = Paint.Style.FILL
-                paintText.setShadowLayer(0.7f, 0.7f, 0.7f, Color.YELLOW)
-
-                val rectText = Rect()
-                paintText.getTextBounds(captionString, 0, captionString.length, rectText)
-                newCanvas.drawText(captionString, 0f, rectText.height().toFloat(), paintText)
-            }
-
-            //} catch (FileNotFoundException e) {
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return newBitmap
-    }
-
-
-    private fun copyBitmatToFile(filename: String, bitmap: Bitmap): String {
-        return try {
-            val f = File(filename)
-
-            val bos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 60, bos)
-            val bitmapdata = bos.toByteArray()
-
-            val fos = FileOutputStream(f)
-            fos.write(bitmapdata)
-            "true"
-
-        } catch (ex: IOException) {
-            ex.message.toString()
-        }
-
-    }
-
-
-    private fun shrinkBitmap(file: String, width: Int, height: Int): Bitmap {
-
+    private fun shrinkBitmap(file: String): Bitmap {
         val options = BitmapFactory.Options()
         options.inSampleSize = 4
         options.inJustDecodeBounds = true
-
-        val heightRatio = ceil((options.outHeight / height.toFloat()).toDouble()).toInt()
-        val widthRatio = ceil((options.outWidth / width.toFloat()).toDouble()).toInt()
+        val heightRatio =
+            ceil((options.outHeight / img_height_default.toFloat()).toDouble())
+                .toInt()
+        val widthRatio =
+            ceil((options.outWidth / img_width_default.toFloat()).toDouble())
+                .toInt()
 
         if (heightRatio > 1 || widthRatio > 1) {
-            if (heightRatio > widthRatio) {
-                options.inSampleSize = heightRatio
-            } else {
-                options.inSampleSize = widthRatio
-            }
+            options.inSampleSize = heightRatio.coerceAtLeast(widthRatio)
         }
 
         options.inJustDecodeBounds = false
-
         return BitmapFactory.decodeFile(file, options)
-
     }
 
-    private fun shrinkBitmapOnlyReduce(
-        file: String,
-        width: Int,
-        height: Int,
-        captionString: String?
-    ) {
-
-        val options = BitmapFactory.Options()
-        options.inSampleSize = 4
-        options.inJustDecodeBounds = true
-
-        val heightRatio = ceil((options.outHeight / height.toFloat()).toDouble()).toInt()
-        val widthRatio = ceil((options.outWidth / width.toFloat()).toDouble()).toInt()
-
-        if (heightRatio > 1 || widthRatio > 1) {
-            if (heightRatio > widthRatio) {
-                options.inSampleSize = heightRatio
-            } else {
-                options.inSampleSize = widthRatio
-            }
-        }
-
-        options.inJustDecodeBounds = false
-
-        try {
-
-
-            val b = BitmapFactory.decodeFile(file, options)
-
-            var config: Bitmap.Config? = b.config
-            if (config == null) {
-                config = Bitmap.Config.ARGB_8888
-            }
-            val newBitmap = Bitmap.createBitmap(b.width, b.height, config)
-
-            val newCanvas = Canvas(newBitmap)
-            newCanvas.drawBitmap(b, 0f, 0f, null)
-
-            if (captionString != null) {
-
-                val paintText = Paint(Paint.ANTI_ALIAS_FLAG)
-                paintText.color = Color.RED
-                paintText.textSize = 22f
-                paintText.style = Paint.Style.FILL
-                paintText.setShadowLayer(0.7f, 0.7f, 0.7f, Color.YELLOW)
-
-                val rectText = Rect()
-                paintText.getTextBounds(captionString, 0, captionString.length, rectText)
-                newCanvas.drawText(captionString, 0f, rectText.height().toFloat(), paintText)
-            }
-
-            val fOut = FileOutputStream(file)
-            val imageName = file.substring(file.lastIndexOf("/") + 1)
-            val imageType = imageName.substring(imageName.lastIndexOf(".") + 1)
-
-            val out = FileOutputStream(file)
-            if (imageType.equals("png", ignoreCase = true)) {
-                newBitmap.compress(Bitmap.CompressFormat.PNG, 70, out)
-            } else if (imageType.equals("jpeg", ignoreCase = true) || imageType.equals(
-                    "jpg",
-                    ignoreCase = true
-                )
-            ) {
-                newBitmap.compress(Bitmap.CompressFormat.JPEG, 70, out)
-            }
-            fOut.flush()
-            fOut.close()
-            newBitmap.recycle()
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun shrinkBitmapOnlyReduceCamera2(
-        file: String
-    ) {
-        val b = BitmapFactory.decodeFile(file)
-        val text = getDateTimeFormatString()
-        var config: Bitmap.Config? = b.config
-        if (config == null) {
-            config = Bitmap.Config.ARGB_8888
-        }
-        val newBitmap = Bitmap.createBitmap(b.width, b.height, config)
-        val newCanvas = Canvas(newBitmap)
-        newCanvas.drawBitmap(b, 0f, 0f, null)
-
-        val paintText = Paint(Paint.ANTI_ALIAS_FLAG)
-        paintText.color = Color.RED
-        paintText.textSize = 22f
-        paintText.style = Paint.Style.FILL
-        paintText.setShadowLayer(0.7f, 0.7f, 0.7f, Color.YELLOW)
-
-        val rectText = Rect()
-        paintText.getTextBounds(text, 0, text.length, rectText)
-        newCanvas.drawText(text, 0f, rectText.height().toFloat(), paintText)
-
-        val fOut = FileOutputStream(file)
-        val imageName = file.substring(file.lastIndexOf("/") + 1)
-        val imageType = imageName.substring(imageName.lastIndexOf(".") + 1)
-
-        val out = FileOutputStream(file)
-        if (imageType.equals("png", ignoreCase = true)) {
-            newBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-        } else if (imageType.equals("jpeg", ignoreCase = true) || imageType.equals(
-                "jpg",
-                ignoreCase = true
-            )
-        ) {
-            newBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
-        }
-        fOut.flush()
-        fOut.close()
-        newBitmap.recycle()
-    }
-
-    // TODO SOBRE ROTAR LA PHOTO
-
-    fun getRightAngleImage(photoPath: String): String {
-
-        try {
-            val ei = ExifInterface(photoPath)
-            val orientation =
-                ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-            val degree: Int
-
-            degree = when (orientation) {
-                ExifInterface.ORIENTATION_NORMAL -> 0
-                ExifInterface.ORIENTATION_ROTATE_90 -> 90
-                ExifInterface.ORIENTATION_ROTATE_180 -> 180
-                ExifInterface.ORIENTATION_ROTATE_270 -> 270
-                ExifInterface.ORIENTATION_UNDEFINED -> 0
-                else -> 90
-            }
-
-            return rotateImage(degree, photoPath)
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return photoPath
-    }
-
-    private fun rotateImage(degree: Int, imagePath: String): String {
-        if (degree <= 0) {
-            shrinkBitmapOnlyReduce(
-                imagePath,
-                img_width_default,
-                img_height_default,
-                getDateTimeFormatString(Date(File(imagePath).lastModified()))
-            )
-            return imagePath
-        }
-        try {
-
-            var b: Bitmap? = shrinkBitmap(imagePath, img_width_default, img_height_default)
-            val matrix = Matrix()
-            if (b!!.width > b.height) {
-                matrix.setRotate(degree.toFloat())
-                b = Bitmap.createBitmap(b, 0, 0, b.width, b.height, matrix, true)
-                b = processingBitmapSetDateTime(
-                    b,
-                    getDateTimeFormatString(Date(File(imagePath).lastModified()))
-                )
-            }
-
-            val fOut = FileOutputStream(imagePath)
-            val imageName = imagePath.substring(imagePath.lastIndexOf("/") + 1)
-            val imageType = imageName.substring(imageName.lastIndexOf(".") + 1)
-
-            val out = FileOutputStream(imagePath)
-            if (imageType.equals("png", ignoreCase = true)) {
-                b!!.compress(Bitmap.CompressFormat.PNG, 70, out)
-            } else if (imageType.equals("jpeg", ignoreCase = true) || imageType.equals(
-                    "jpg",
-                    ignoreCase = true
-                )
-            ) {
-                b!!.compress(Bitmap.CompressFormat.JPEG, 70, out)
-            }
-            fOut.flush()
-            fOut.close()
-            b!!.recycle()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return imagePath
-    }
 
     fun getVersion(context: Context): String {
         val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -533,7 +272,7 @@ object Util {
     fun getImei(context: Context): String {
         val deviceUniqueIdentifier: String
         val telephonyManager: TelephonyManager? =
-            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
         deviceUniqueIdentifier = if (telephonyManager != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 telephonyManager.imei
@@ -636,7 +375,7 @@ object Util {
         val mHour = c.get(Calendar.HOUR_OF_DAY)
         val mMinute = c.get(Calendar.MINUTE)
         val timePickerDialog =
-            TimePickerDialog(context, TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
+            TimePickerDialog(context, { _, hourOfDay, minute ->
                 val hour = if (hourOfDay < 10) "0$hourOfDay" else hourOfDay.toString()
                 val minutes = if (minute < 10) "0$minute" else minute.toString()
                 val day = if (hourOfDay < 12) "a.m." else "p.m."
@@ -748,6 +487,10 @@ object Util {
     fun deletePhoto(photo: String, context: Context) {
         val f = File(getFolder(context), photo)
         if (f.exists()) {
+            val uriSavedImage = FileProvider.getUriForFile(
+                context, BuildConfig.APPLICATION_ID + ".fileprovider", f
+            )
+            context.contentResolver.delete(uriSavedImage, null, null)
             f.delete()
         }
     }
@@ -825,30 +568,18 @@ object Util {
         return kmInDec.toDouble()
     }
 
-    fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
-        return ContextCompat.getDrawable(context, vectorResId)?.run {
-            setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-            val bitmap =
-                Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
-            draw(Canvas(bitmap))
-            BitmapDescriptorFactory.fromBitmap(bitmap)
-        }
-    }
-
     fun getAngleImage(
         context: Context,
         photoPath: String,
         fecha: String,
-        direccion: String,
-        distrito: String
+        direccion: String
     ): String {
         try {
             val ei = ExifInterface(photoPath)
-            val orientation =
-                ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-            val degree: Int
-
-            degree = when (orientation) {
+            val degree: Int = when (ei.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )) {
                 ExifInterface.ORIENTATION_NORMAL -> 0
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -856,7 +587,7 @@ object Util {
                 ExifInterface.ORIENTATION_UNDEFINED -> 0
                 else -> 90
             }
-            return rotateNewImage(context, degree, photoPath, fecha, direccion, distrito)
+            return rotateImage(context, degree, photoPath, fecha, direccion)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -865,51 +596,35 @@ object Util {
         return photoPath
     }
 
-    private fun rotateNewImage(
+    private fun rotateImage(
         context: Context,
         degree: Int,
         imagePath: String,
         fecha: String,
-        direccion: String,
-        distrito: String
+        direccion: String
     ): String {
         try {
-            var b: Bitmap? = BitmapFactory.decodeFile(imagePath)
+            var b: Bitmap = shrinkBitmap(imagePath)
             val matrix = Matrix()
-            if (b!!.width > b.height) {
-                matrix.setRotate(degree.toFloat())
-//                b = Bitmap.createBitmap(b, 0, 0, 480, 640, matrix, true)
-                b = Bitmap.createBitmap(b, 0, 0, b.width, b.height, matrix, true)
-                val text = String.format(
-                    "%s\n%s\n%s",
-                    if (fecha.isEmpty()) getDateTimeFormatString(Date(File(imagePath).lastModified())) else String.format(
-                        "%s %s",
-                        fecha,
-                        getHoraActual()
-                    ),
-                    direccion,
-                    distrito
-                )
-                b = drawTextToBitmap(context, b, text)
-            }
+            matrix.setRotate(degree.toFloat())
+            b = Bitmap.createBitmap(b, 0, 0, b.width, b.height, matrix, true)
+
+            val text = String.format(
+                "%s\n%s",
+                if (fecha.isEmpty()) getDateTimeFormatString(Date(File(imagePath).lastModified())) else String.format(
+                    "%s %s",
+                    fecha,
+                    getHoraActual()
+                ),
+                direccion
+            )
+            b = drawTextToBitmap(context, b, text)
 
             val fOut = FileOutputStream(imagePath)
-            val imageName = imagePath.substring(imagePath.lastIndexOf("/") + 1)
-            val imageType = imageName.substring(imageName.lastIndexOf(".") + 1)
-
-            val out = FileOutputStream(imagePath)
-            if (imageType.equals("png", ignoreCase = true)) {
-                b!!.compress(Bitmap.CompressFormat.PNG, 100, out)
-            } else if (imageType.equals("jpeg", ignoreCase = true) || imageType.equals(
-                    "jpg",
-                    ignoreCase = true
-                )
-            ) {
-                b!!.compress(Bitmap.CompressFormat.JPEG, 100, out)
-            }
+            b.compress(Bitmap.CompressFormat.JPEG, 70, fOut)
             fOut.flush()
             fOut.close()
-            b!!.recycle()
+            b.recycle()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -917,11 +632,12 @@ object Util {
         return imagePath
     }
 
+
     private fun drawTextToBitmap(
         gContext: Context,
         b: Bitmap,
         gText: String
-    ): Bitmap? {
+    ): Bitmap {
         var bitmap = b
         var bitmapConfig = bitmap.config
 
@@ -938,7 +654,7 @@ object Util {
         // text color - #3D3D3D
         paint.color = Color.WHITE
         // text size in pixels
-        paint.textSize = 18f
+        paint.textSize = 19f
         // text shadow
         paint.setShadowLayer(1f, 0f, 1f, Color.WHITE)
 
@@ -953,13 +669,17 @@ object Util {
         var y: Float = (bitmap.height - bounds.height() * noOfLines).toFloat()
         val mPaint = Paint()
         mPaint.color = ContextCompat.getColor(gContext, R.color.transparentBlack)
+        mPaint.strokeWidth = 10f
         val left = 0
         val top = bitmap.height - bounds.height() * (noOfLines + 1)
         val right = bitmap.width
         val bottom = bitmap.height
         canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), mPaint)
         for (line in gText.split("\n").toTypedArray()) {
-            canvas.drawText(line, x.toFloat(), y, paint)
+            val textPaint = TextPaint()
+            val txt =
+                TextUtils.ellipsize(line, textPaint, (y * 0.45).toFloat(), TextUtils.TruncateAt.END)
+            canvas.drawText(txt.toString(), x.toFloat(), y, paint)
             y += paint.descent() - paint.ascent()
         }
         return bitmap
@@ -984,9 +704,7 @@ object Util {
                 .delay(1000, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(object : Observer<Address> {
-                    override fun onSubscribe(d: Disposable) {
-
-                    }
+                    override fun onSubscribe(d: Disposable) {}
 
                     override fun onNext(address: Address) {
                         nombre[0] = address.getAddressLine(0)
@@ -1032,10 +750,10 @@ object Util {
 
     // execute services
     fun executeRepartoWork(context: Context) {
-        val downloadConstraints = Constraints.Builder()
-            .setRequiresCharging(true)
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+//        val downloadConstraints = Constraints.Builder()
+//            .setRequiresCharging(true)
+//            .setRequiredNetworkType(NetworkType.CONNECTED)
+//            .build()
         // Define the input data for work manager
 //        val data = Data.Builder()
 //        data.putInt("tipo", tipo)
@@ -1060,11 +778,77 @@ object Util {
                 .build()
         WorkManager
             .getInstance(context)
-            .enqueueUniquePeriodicWork("Gps-Work", ExistingPeriodicWorkPolicy.REPLACE, locationWorker)
+            .enqueueUniquePeriodicWork(
+                "Gps-Work",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                locationWorker
+            )
         toastMensaje(context, "Servicio Gps Activado")
     }
 
     fun closeGpsWork(context: Context) {
         WorkManager.getInstance(context).cancelAllWorkByTag("Gps-Work")
+    }
+
+    fun createImageFile(name: String, context: Context): File {
+        return File(getFolder(context), "$name.jpg").apply {
+            absolutePath
+        }
+    }
+
+    fun getPhotoAdjunto(
+        nameImg: String, context: Context, direccion: String,
+        latitud: String, longitud: String, id: Int
+    ): Observable<Photo> {
+        return Observable.create {
+            val f = File(getFolder(context), "$nameImg.jpg")
+            if (f.exists()) {
+                getAngleImage(context, f.absolutePath, "", direccion)
+            }
+            val photo = Photo(
+                0,
+                id,
+                "$nameImg.jpg",
+                getFechaActual(),
+                5,
+                1,
+                latitud,
+                longitud
+            )
+            it.onNext(photo)
+            it.onComplete()
+        }
+    }
+
+    fun getDateFirmReparto(id: Int, tipo: Int): String {
+        val date = Date()
+        @SuppressLint("SimpleDateFormat") val format = SimpleDateFormat("ddMMyyyy_HHmmssSSS")
+        val fechaActual = format.format(date)
+        return String.format("Firm_%s_%s_%s.jpg", id, tipo, fechaActual)
+    }
+
+    fun getDateFirmReconexiones(id: Int, tipo: Int, f: String): String {
+        val date = Date()
+        @SuppressLint("SimpleDateFormat") val format = SimpleDateFormat("ddMMyyyy_HHmmssSSS")
+        val fechaActual = format.format(date)
+        return String.format("Firm(%s)_%s_%s_%s.jpg", f, id, tipo, fechaActual)
+    }
+
+    fun comprimirImagen(pathFile: String) {
+        val imagen = shrinkBitmap(pathFile)
+        copyBitmatToFile(pathFile, imagen)
+    }
+
+    private fun copyBitmatToFile(filename: String, bitmap: Bitmap) {
+        try {
+            val f = File(filename)
+            val bos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 60, bos)
+            val bitmapdata = bos.toByteArray()
+            val fos = FileOutputStream(f)
+            fos.write(bitmapdata)
+        } catch (ex: IOException) {
+            ex.message
+        }
     }
 }

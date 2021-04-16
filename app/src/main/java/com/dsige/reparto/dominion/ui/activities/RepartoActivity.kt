@@ -2,15 +2,21 @@ package com.dsige.reparto.dominion.ui.activities
 
 import android.content.Intent
 import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
+import android.provider.MediaStore
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.View
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.dsige.reparto.dominion.BuildConfig
 import com.dsige.reparto.dominion.ui.adapters.PhotoAdapter
 import com.dsige.reparto.dominion.R
 import com.dsige.reparto.dominion.data.local.model.Photo
@@ -19,6 +25,7 @@ import com.dsige.reparto.dominion.data.local.model.Reparto
 import com.dsige.reparto.dominion.data.viewModel.RepartoViewModel
 import com.dsige.reparto.dominion.data.viewModel.ViewModelFactory
 import com.dsige.reparto.dominion.helper.Gps
+import com.dsige.reparto.dominion.helper.Permission
 import com.dsige.reparto.dominion.helper.Util
 import com.dsige.reparto.dominion.ui.listeners.OnItemClickListener
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -30,6 +37,8 @@ import io.reactivex.Observer
 import kotlinx.android.synthetic.main.activity_reparto.*
 import kotlinx.android.synthetic.main.activity_reparto.recyclerView
 import kotlinx.android.synthetic.main.fragment_main.*
+import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 
 class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
@@ -60,13 +69,14 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                 } else repartoViewModel.setError("Se requiere foto")
             }
             R.id.imageView -> if (cantidad < 2) {
-                startActivity(
-                    Intent(this, CameraActivity::class.java)
-                        .putExtra("repartoId", repartoId)
-                        .putExtra("cuentaContrato", barcode_code)
-                        .putExtra("tipo", 1)
-                        .putExtra("direccion", direccion)
-                )
+                goCamera()
+//                startActivity(
+//                    Intent(this, CameraActivity::class.java)
+//                        .putExtra("repartoId", repartoId)
+//                        .putExtra("cuentaContrato", barcode_code)
+//                        .putExtra("tipo", 1)
+//                        .putExtra("direccion", direccion)
+//                )
             } else {
                 Util.dialogMensaje(this, "Mensaje", "Maximo 2 fotos")
             }
@@ -91,7 +101,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
 
     private var operarioId: Int = 0
     private var cliente: String = ""
-
+    private var nameImg = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,7 +170,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
         editTextCodigoBarra.requestFocus()
 
         repartoViewModel.getAllRegistro(1).observe(this, {
-            if (it >= 10) {
+            if (it >= 100) {
                 Util.executeRepartoWork(this)
             }
         })
@@ -249,7 +259,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
     private fun deletePhoto(p: Photo) {
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle("Mensaje")
-            .setMessage("Desas eliminar foto ?")
+            .setMessage("Deseas eliminar foto ?")
             .setPositiveButton("SI") { dialog, _ ->
                 repartoViewModel.deletePhoto(p, barcode_code, this)
                 dialog.dismiss()
@@ -287,5 +297,51 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
             false
         }
         popupMenu.show()
+    }
+
+
+    private fun goCamera() {
+        Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+            takePictureIntent.resolveActivity(packageManager)?.also {
+                nameImg = Util.getFechaActualForPhoto(barcode_code, 5)
+                val photoFile: File =
+                    Util.createImageFile(nameImg, this)
+                photoFile.also {
+                    val uriSavedImage = FileProvider.getUriForFile(
+                        this, BuildConfig.APPLICATION_ID + ".fileprovider", it
+                    )
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage)
+                    if (Build.VERSION.SDK_INT >= 24) {
+                        try {
+                            val m =
+                                StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
+                            m.invoke(null)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    startActivityForResult(takePictureIntent, Permission.CAMERA_REQUEST)
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == Permission.CAMERA_REQUEST && resultCode == RESULT_OK) {
+            val gps = Gps(this)
+            if (gps.isLocationEnabled()) {
+                repartoViewModel.generarArchivo(
+                    nameImg,
+                    this@RepartoActivity,
+                    direccion,
+                    gps.getLatitude().toString(),
+                    gps.getLongitude().toString(),
+                    repartoId
+                )
+            } else {
+                gps.showSettingsAlert(this)
+            }
+        }
     }
 }

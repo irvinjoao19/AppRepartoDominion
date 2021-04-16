@@ -1,12 +1,10 @@
 package com.dsige.reparto.dominion.ui.activities
 
+import android.graphics.Insets
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.Observer
+import android.view.*
 import androidx.lifecycle.ViewModelProvider
 import com.dsige.reparto.dominion.R
 import com.dsige.reparto.dominion.data.viewModel.RepartoViewModel
@@ -73,9 +71,18 @@ class FirmActivity : DaggerAppCompatActivity(), View.OnClickListener {
             finish()
         }
 
-        val metrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(metrics)
-        paintView.init(metrics)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics: WindowMetrics = windowManager.currentWindowMetrics
+            val insets: Insets = windowMetrics.windowInsets
+                .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+            windowMetrics.bounds.width() - insets.left - insets.right
+            paintView.initNew(windowMetrics)
+        } else {
+            val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getMetrics(metrics)
+            paintView.init(metrics)
+        }
         fabFirma.setOnClickListener(this)
 
         repartoViewModel.mensajeError.observe(this, {
