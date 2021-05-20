@@ -49,13 +49,17 @@ interface AppRepository {
     fun getRecibos(repartoId: Int): LiveData<List<Recibo>>
     fun savePhotoReparto(p: Photo): Completable
 
-
-
     //gps
     fun insertGps(e: OperarioGps): Completable
     fun getSendGps(): Observable<List<OperarioGps>>
     fun saveOperarioGps(e: OperarioGps): Observable<Mensaje>
     fun updateEnabledGps(t: Mensaje): Completable
+
+    //batterry
+    fun insertBattery(e: OperarioBattery): Completable
+    fun getSendBattery(): Observable<List<OperarioBattery>>
+    fun saveOperarioBattery(e: OperarioBattery): Observable<Mensaje>
+    fun updateEnabledBattery(t: Mensaje): Completable
 
     //envio
     fun getFiles(): Observable<List<String>>

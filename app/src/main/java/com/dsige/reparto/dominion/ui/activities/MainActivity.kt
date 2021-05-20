@@ -93,7 +93,10 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
             "Envio de Pendientes" -> changeFragment(
                 SendFragment.newInstance("", ""), item.title.toString()
             )
-            "Servicio Gps" -> Util.executeGpsWork(this)
+            "Servicio Gps" -> {
+                Util.executeGpsWork(this)
+                Util.executeBatteryWork(this)
+            }
             "Cerrar Sesión" -> dialogFunction(
                 3, "Al cerrar Sesión estaras eliminando todo tus avances. \nDeseas Salir ?"
             )
@@ -198,6 +201,7 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
                     3 -> {
                         logout = "on"
                         Util.closeGpsWork(this)
+                        Util.closeBatteryWork(this)
                         load("Cerrando Session")
                         usuarioViewModel.logout()
                     }

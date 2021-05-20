@@ -73,4 +73,9 @@ class DataBaseModule {
     internal fun provideGpsDao(appDataBase: AppDataBase): OperarioGpsDao {
         return appDataBase.operarioGpsDao()
     }
+
+    @Provides
+    internal fun provideBatteryDao(appDataBase: AppDataBase): OperarioBatteryDao {
+        return appDataBase.operarioBatteryDao()
+    }
 }

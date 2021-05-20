@@ -1,7 +1,6 @@
 package com.dsige.reparto.dominion.data.local.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import com.dsige.reparto.dominion.data.local.model.*
 import com.dsige.reparto.dominion.data.local.AppDataBase
@@ -15,7 +14,6 @@ import okhttp3.RequestBody
 
 class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDataBase) :
     AppRepository {
-
 
     override fun getUsuario(): LiveData<Usuario> {
         return dataBase.usuarioDao().getUsuario()
@@ -250,7 +248,7 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
 
     override fun saveOperarioGps(e: OperarioGps): Observable<Mensaje> {
         val json = Gson().toJson(e)
-        Log.i("TAG", json)
+//        Log.i("TAG", json)
         val body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
         return apiService.saveOperarioGps(body)
     }
@@ -260,6 +258,34 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
             dataBase.operarioGpsDao().updateEnabledGps(t.codigoBase)
         }
     }
+
+    override fun insertBattery(e: OperarioBattery): Completable {
+        return Completable.fromAction {
+            dataBase.operarioBatteryDao().insertOperarioBatteryTask(e)
+        }
+    }
+
+    override fun getSendBattery(): Observable<List<OperarioBattery>> {
+        return Observable.create {
+            val gps: List<OperarioBattery> = dataBase.operarioBatteryDao().getOperarioBatteryTask()
+            it.onNext(gps)
+            it.onComplete()
+        }
+    }
+
+    override fun saveOperarioBattery(e: OperarioBattery): Observable<Mensaje> {
+        val json = Gson().toJson(e)
+//        Log.i("TAG", json)
+        val body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
+        return apiService.saveOperarioBattery(body)
+    }
+
+    override fun updateEnabledBattery(t: Mensaje): Completable {
+        return Completable.fromAction {
+            dataBase.operarioBatteryDao().updateEnabledBattery(t.codigo)
+        }
+    }
+
 
     override fun getFiles(): Observable<List<String>> {
         return Observable.create {

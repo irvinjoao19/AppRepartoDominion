@@ -8,11 +8,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationManager
 import android.media.MediaPlayer
@@ -22,7 +19,6 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import androidx.work.ListenableWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -54,8 +50,8 @@ internal constructor(
 
         if (isGPSEnabled.isProviderEnabled(LocationManager.GPS_PROVIDER) && checkLocationPermission) {
             LocationServices.getFusedLocationProviderClient(context)
-                ?.lastLocation
-                ?.addOnSuccessListener { location: Location? ->
+                .lastLocation
+                .addOnSuccessListener { location: Location? ->
                     if (location != null) {
                         getUsuario(location)
                     }

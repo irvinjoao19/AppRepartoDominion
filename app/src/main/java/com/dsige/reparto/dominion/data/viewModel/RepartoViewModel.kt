@@ -1,7 +1,6 @@
 package com.dsige.reparto.dominion.data.viewModel
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -143,16 +142,13 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : CompletableObserver {
+                override fun onSubscribe(d: Disposable) {}
                 override fun onComplete() {
                     if (validation == 2) {
                         mensajeSuccess.value = "Favor de firmar para completar formulario"
                     } else {
                         mensajeSuccess.value = "Recibo Guardado"
                     }
-                }
-
-                override fun onSubscribe(d: Disposable) {
-
                 }
 
                 override fun onError(e: Throwable) {
@@ -244,7 +240,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             .subscribe(object : Observer<String> {
                 override fun onSubscribe(d: Disposable) {}
                 override fun onNext(m: String) {
-                    Log.i("TAG", m)
+//                    Log.i("TAG", m)
                 }
 
                 override fun onError(e: Throwable) {
@@ -254,8 +250,9 @@ internal constructor(private val roomRepository: AppRepository, private val retr
                             val error = retrofit.errorConverter.convert(body!!)
                             mensajeError.postValue(error!!.Message)
                         } catch (e1: IOException) {
+                            mensajeError.postValue(e1.toString())
                             e1.printStackTrace()
-                            Log.i("TAG", e1.toString())
+//                            Log.i("TAG", e1.toString())
                         }
                     } else {
                         mensajeError.postValue(e.message)
@@ -274,7 +271,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
         ots.flatMap { observable ->
             Observable.fromIterable(observable).flatMap { a ->
                 val json = Gson().toJson(a)
-                Log.i("TAG", json)
+//                Log.i("TAG", json)
                 val body =
                     RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
                 Observable.zip(
@@ -284,10 +281,6 @@ internal constructor(private val roomRepository: AppRepository, private val retr
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Mensaje> {
-                override fun onComplete() {
-                    mensajeSuccess.value = "Datos Enviados"
-                }
-
                 override fun onSubscribe(d: Disposable) {}
                 override fun onError(t: Throwable) {
                     mensajeError.value = t.message
@@ -295,6 +288,10 @@ internal constructor(private val roomRepository: AppRepository, private val retr
 
                 override fun onNext(t: Mensaje) {
                     updateEnabledReparto(t)
+                }
+
+                override fun onComplete() {
+                    mensajeSuccess.value = "Datos Enviados"
                 }
             })
     }
@@ -310,21 +307,27 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             })
     }
 
-    fun generarArchivo(nameImg: String, context: Context, direccion: String, latitud: String, longitud: String,id:Int) {
+    fun generarArchivo(
+        nameImg: String,
+        context: Context,
+        direccion: String,
+        latitud: String,
+        longitud: String,
+        id: Int
+    ) {
         Util.getPhotoAdjunto(
-            nameImg, context,  direccion,
+            nameImg, context, direccion,
             latitud, longitud, id
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Photo> {
                 override fun onSubscribe(d: Disposable) {}
+                override fun onError(e: Throwable) {}
+                override fun onComplete() {}
                 override fun onNext(t: Photo) {
                     savePhotoReparto(t)
                 }
-
-                override fun onError(e: Throwable) {}
-                override fun onComplete() {}
             })
     }
 }

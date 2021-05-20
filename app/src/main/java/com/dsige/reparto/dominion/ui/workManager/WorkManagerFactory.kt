@@ -13,7 +13,7 @@ internal constructor(private val workerFactories: Map<Class<out ListenableWorker
 
     override fun createWorker(
         appContext: Context, workerClassName: String, workerParameters: WorkerParameters
-    ): ListenableWorker? {
+    ): ListenableWorker {
         val foundEntry =
             workerFactories.entries.find { Class.forName(workerClassName).isAssignableFrom(it.key) }
         val factoryProvider = foundEntry?.value

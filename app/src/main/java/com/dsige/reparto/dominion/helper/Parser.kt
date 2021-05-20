@@ -1,6 +1,5 @@
 package com.dsige.reparto.dominion.helper
 
-import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import org.json.JSONArray
 import org.json.JSONObject
@@ -8,7 +7,7 @@ import java.util.*
 
 object Parser {
 
-    fun parse(jObject: JSONObject): List<List<HashMap<String, String>>>? {
+    fun parse(jObject: JSONObject): List<List<HashMap<String, String>>> {
         val routes: MutableList<List<HashMap<String, String>>> =
             ArrayList()
         val jRoutes: JSONArray
@@ -41,7 +40,7 @@ object Parser {
         return routes
     }
 
-    fun marker(jObject: JSONObject): List<List<HashMap<String, String>>>? {
+    fun marker(jObject: JSONObject): List<List<HashMap<String, String>>> {
         val routes: MutableList<List<HashMap<String, String>>> =
             ArrayList()
         val jRoutes: JSONArray
@@ -64,7 +63,7 @@ object Parser {
                 routes.add(path)
             }
         } catch (e: Exception) {
-            Log.i("TAG", e.toString())
+//            Log.i("TAG", e.toString())
             e.printStackTrace()
         }
         return routes

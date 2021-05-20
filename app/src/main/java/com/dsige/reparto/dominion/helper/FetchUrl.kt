@@ -2,7 +2,6 @@ package com.dsige.reparto.dominion.helper
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import io.reactivex.Observable
@@ -58,10 +57,10 @@ class FetchUrl(private val url: String, private val directionMode: String, conte
                 sb.append(line)
             }
             data = sb.toString()
-            Log.d("mylog", "Downloaded URL: $data")
+//            Log.d("mylog", "Downloaded URL: $data")
             br.close()
         } catch (e: Exception) {
-            Log.d("mylog", "Exception downloading URL: $e")
+//            Log.d("mylog", "Exception downloading URL: $e")
         } finally {
             iStream?.close()
             urlConnection?.disconnect()
@@ -114,12 +113,10 @@ class FetchUrl(private val url: String, private val directionMode: String, conte
                 lineOptions.width(13f)
                 lineOptions.color(Color.RED)
             }
-            Log.d("mylog", "onPostExecute lineoptions decoded")
+//            Log.d("mylog", "onPostExecute lineoptions decoded")
         }
         if (lineOptions != null) {
             taskCallback.onTaskDone(lineOptions)
-        } else {
-            Log.d("mylog", "without Polylines drawn")
         }
     }
 }

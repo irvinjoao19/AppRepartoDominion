@@ -17,4 +17,9 @@ abstract class WorkerModule {
     @IntoMap
     @WorkerKey(GpsWork::class)
     internal abstract fun bindGpsWork(repartoWork: GpsWork.Factory): ChildWorkerFactory
+
+    @Binds
+    @IntoMap
+    @WorkerKey(BatteryWork::class)
+    internal abstract fun bindBatteryWork(batteryWork: BatteryWork.Factory): ChildWorkerFactory
 }

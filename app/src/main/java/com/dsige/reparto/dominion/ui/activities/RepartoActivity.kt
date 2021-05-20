@@ -2,7 +2,6 @@ package com.dsige.reparto.dominion.ui.activities
 
 import android.content.Intent
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -11,7 +10,6 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.View
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -38,7 +36,7 @@ import kotlinx.android.synthetic.main.activity_reparto.*
 import kotlinx.android.synthetic.main.activity_reparto.recyclerView
 import kotlinx.android.synthetic.main.fragment_main.*
 import java.io.File
-import java.io.IOException
+import java.util.*
 import javax.inject.Inject
 
 class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
@@ -156,12 +154,15 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                 }
                 if (tipo == 1) {
                     val barcode = data.toString().split("?")
-                    generateReparto(barcode[0])
+                    val str = barcode[0].replace(("[^\\d.]").toRegex(), "")
+                    generateReparto(str)
                 }
                 if (tipo == 2) {
                     val barcode2 = data.toString().split("_")
-                    generateReparto(barcode2[0])
+                    val str = barcode2[0].replace(("[^\\d.]").toRegex(), "")
+                    generateReparto(str)
                 }
+                Util.getTextStyleHtml(String.format("<strong>Ultimo resultado:</strong> %s", data),textViewResult)
             }
             true
         }

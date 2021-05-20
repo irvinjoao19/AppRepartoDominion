@@ -11,6 +11,7 @@ import android.graphics.*
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -20,7 +21,6 @@ import android.text.Html
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.TextUtils
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -37,6 +37,7 @@ import androidx.work.WorkManager
 import com.dsige.reparto.dominion.BuildConfig
 import com.dsige.reparto.dominion.R
 import com.dsige.reparto.dominion.data.local.model.Photo
+import com.dsige.reparto.dominion.ui.workManager.BatteryWork
 import com.dsige.reparto.dominion.ui.workManager.GpsWork
 import com.dsige.reparto.dominion.ui.workManager.RepartoWork
 import com.google.android.gms.maps.model.LatLng
@@ -61,12 +62,7 @@ import kotlin.collections.ArrayList
 import kotlin.math.*
 
 object Util {
-
-    val FolderImg = "Dsige/Lds"
-    val UrlFoto = "http://190.117.104.122/WebApi_Itf/Imagen/"
-
     private var FechaActual: String? = ""
-
     private const val img_height_default = 800
     private const val img_width_default = 600
 
@@ -451,7 +447,7 @@ object Util {
     fun isNumeric(strNum: String): Boolean {
         try {
             val d = Integer.parseInt(strNum)
-            Log.i("TAG", d.toString())
+//            Log.i("TAG", d.toString())
         } catch (nfe: NumberFormatException) {
             return false
         } catch (nfe: NullPointerException) {
@@ -463,7 +459,7 @@ object Util {
     fun isDecimal(s: String): Boolean {
         try {
             val d = s.toDouble()
-            Log.i("TAG", d.toString())
+//            Log.i("TAG", d.toString())
         } catch (nfe: NumberFormatException) {
             return false
         } catch (nfe: NullPointerException) {
@@ -734,10 +730,7 @@ object Util {
             val f = File(imagepath)
             if (!f.exists()) {
                 try {
-                    val success = f.createNewFile()
-                    if (success) {
-                        Log.i("TAG", "FILE CREATED")
-                    }
+                    f.createNewFile()
                     copyFile(File(getRealPathFromURI(context, data.data!!)), f)
 //                    shrinkBitmapOnlyReduceCamera2(imagepath)
 //                    getAngleImage(imagepath)
@@ -788,6 +781,28 @@ object Util {
 
     fun closeGpsWork(context: Context) {
         WorkManager.getInstance(context).cancelAllWorkByTag("Gps-Work")
+    }
+
+    fun executeBatteryWork(context: Context) {
+//        val downloadConstraints = Constraints.Builder()
+//            .setRequiresCharging(true)
+//            .setRequiredNetworkType(NetworkType.CONNECTED)
+//            .build()
+        val locationWorker =
+            PeriodicWorkRequestBuilder<BatteryWork>(15, TimeUnit.MINUTES)
+//                .setConstraints(downloadConstraints)
+                .build()
+        WorkManager
+            .getInstance(context)
+            .enqueueUniquePeriodicWork(
+                "Battery-Work",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                locationWorker
+            )
+    }
+
+    fun closeBatteryWork(context: Context) {
+        WorkManager.getInstance(context).cancelAllWorkByTag("Battery-Work")
     }
 
     fun createImageFile(name: String, context: Context): File {
@@ -850,5 +865,14 @@ object Util {
         } catch (ex: IOException) {
             ex.message
         }
+    }
+
+    fun getMobileDataState(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val cmClass = Class.forName(cm.javaClass.name)
+        val method = cmClass.getDeclaredMethod("getMobileDataEnabled")
+        method.isAccessible = true // Make the method callable
+        // get the setting for "mobile data"
+        return method.invoke(cm) as Boolean
     }
 }

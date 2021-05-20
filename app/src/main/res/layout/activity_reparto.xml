@@ -41,7 +41,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="8dp"
-                    android:text="Cuenta contrato"
+                    android:text="@string/cuenta_contrato"
                     android:textAppearance="?android:attr/textAppearanceListItemSmall"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -72,6 +72,16 @@
                     app:layout_constraintTop_toBottomOf="@+id/textViewTitle"
                     tools:ignore="Autofill,KeyboardInaccessibleWidget,LabelFor" />
 
+                <TextView
+                    android:id="@+id/textViewResult"
+                    android:layout_width="match_parent"
+                    android:layout_margin="8dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/editTextCodigoBarra"
+                    android:lines="2"
+                    android:layout_height="wrap_content"/>
+
                 <ImageView
                     android:id="@+id/imgView"
                     android:layout_width="match_parent"
@@ -80,7 +90,7 @@
                     android:contentDescription="@string/img"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/editTextCodigoBarra"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewResult"
                     app:srcCompat="@drawable/ic_barcode" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 

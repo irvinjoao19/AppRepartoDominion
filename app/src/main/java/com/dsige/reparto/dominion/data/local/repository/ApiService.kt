@@ -4,7 +4,6 @@ import com.dsige.reparto.dominion.data.local.model.*
 import com.dsige.reparto.dominion.helper.Mensaje
 import io.reactivex.Observable
 import okhttp3.RequestBody
-import retrofit2.Call
 import retrofit2.http.*
 
 interface ApiService {
@@ -35,7 +34,7 @@ interface ApiService {
     fun sendPhoto(@Body query: RequestBody): Observable<String>
 
     @POST("SaveEstadoMovil")
-    fun saveEstadoMovil(@Body movil: RequestBody): Call<Mensaje>
+    fun saveOperarioBattery(@Body movil: RequestBody): Observable<Mensaje>
 
     @Headers("Cache-Control: no-cache")
     @POST("SaveGpsOperario")

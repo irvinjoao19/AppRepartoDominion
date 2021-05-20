@@ -1,18 +1,14 @@
 package com.dsige.reparto.dominion.ui.workManager
 
 import android.content.Context
-import android.util.Log
 import androidx.work.ListenableWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.dsige.reparto.dominion.data.local.model.Photo
 import com.dsige.reparto.dominion.data.local.model.Registro
-import com.dsige.reparto.dominion.data.local.model.Recibo
 import com.dsige.reparto.dominion.data.local.repository.AppRepository
 import com.dsige.reparto.dominion.helper.Mensaje
 import com.dsige.reparto.dominion.helper.Util
 import com.google.gson.Gson
-import com.jakewharton.retrofit2.adapter.rxjava2.HttpException
 import io.reactivex.CompletableObserver
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -23,8 +19,6 @@ import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
-import java.io.IOException
-import java.util.ArrayList
 import javax.inject.Inject
 import javax.inject.Provider
 
@@ -86,7 +80,7 @@ internal constructor(
         ots.flatMap { observable ->
             Observable.fromIterable(observable).flatMap { a ->
                 val json = Gson().toJson(a)
-                Log.i("TAG", json)
+//                Log.i("TAG", json)
                 val body =
                     RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
                 Observable.zip(

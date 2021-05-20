@@ -2,7 +2,6 @@ package com.dsige.reparto.dominion.data.viewModel
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -40,25 +39,26 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Usuario> {
                 override fun onSubscribe(d: Disposable) {}
+                override fun onComplete() {}
                 override fun onNext(usuario: Usuario) {
-                    insertUsuario(usuario, version)
+                    if (usuario.mensaje == "Pass") {
+                        mensajeError.postValue("Contraseña incorrecta.")
+                    } else {
+                        insertUsuario(usuario, version)
+                    }
                 }
 
                 override fun onError(t: Throwable) {
                     if (t is HttpException) {
-                        val body = t.response().errorBody()
-                        try {
-                            val error = retrofit.errorConverter.convert(body!!)
-                            mensajeError.postValue(error!!.Message)
-                        } catch (e1: IOException) {
-                            e1.printStackTrace()
+                        val code = t.code()
+                        if (code == 404) {
+                            mensajeError.postValue("Usuario no existe")
+                        } else {
+                            mensajeError.postValue(t.message)
                         }
                     } else {
                         mensajeError.postValue(t.message)
                     }
-                }
-
-                override fun onComplete() {
                 }
             })
     }
@@ -123,7 +123,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
                                         mensajeError.postValue(error!!.Message)
                                     } catch (e1: IOException) {
                                         e1.printStackTrace()
-                                        Log.i("TAG", e1.toString())
+                                        mensajeError.postValue(e1.toString())
                                     }
                                 } else {
                                     mensajeError.postValue(e.toString())
@@ -153,16 +153,10 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : CompletableObserver {
+                override fun onSubscribe(d: Disposable) {}
+                override fun onError(e: Throwable) {}
                 override fun onComplete() {
                     mensajeSuccess.value = nameImg
-                }
-
-                override fun onSubscribe(d: Disposable) {
-
-                }
-
-                override fun onError(e: Throwable) {
-                    Log.i("TAG", e.toString())
                 }
             })
     }
