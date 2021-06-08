@@ -11,6 +11,7 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import okhttp3.MediaType
 import okhttp3.RequestBody
+import java.io.File
 
 class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDataBase) :
     AppRepository {
@@ -287,7 +288,7 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
     }
 
 
-    override fun getFiles(): Observable<List<String>> {
+    override fun getFiles(context:Context): Observable<List<String>> {
         return Observable.create {
             val files: ArrayList<String> = ArrayList()
             val v: List<Registro> = dataBase.registroDao().getRegistroTask(1)
@@ -296,15 +297,23 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
                     val recibo: Recibo? = dataBase.reciboDao().getReciboTaskByFk(r.id)
                     if (recibo != null) {
                         if (recibo.firmaCliente.isNotEmpty()) {
-                            files.add(recibo.firmaCliente)
+                            val file = File(Util.getFolder(context), recibo.firmaCliente)
+                            if (file.exists()) {
+                                files.add(recibo.firmaCliente)
+                            }
                         }
-                    }
-                    val photos = dataBase.photoDao().getPhotoByFk(r.iD_Suministro)
-                    for (p: Photo in photos) {
-                        files.add(p.rutaFoto)
                     }
                 }
             }
+
+            val photos = dataBase.photoDao().getPhotosTask()
+            for (p: Photo in photos) {
+                val file = File(Util.getFolder(context), p.rutaFoto)
+                if (file.exists()) {
+                    files.add(p.rutaFoto)
+                }
+            }
+
             it.onNext(files)
             it.onComplete()
         }

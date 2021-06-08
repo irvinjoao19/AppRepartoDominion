@@ -8,7 +8,10 @@ import retrofit2.http.*
 
 interface ApiService {
 
-    @Headers("Cache-Control: no-cache")
+    @Headers(
+        "Cache-Control: no-cache",
+        "Content-Type: application/json"
+    )
     @GET("GetLogin")
     fun getLogin(
         @Query("user") user: String,
@@ -18,7 +21,10 @@ interface ApiService {
         @Query("token") token: String
     ): Observable<Usuario>
 
-    @Headers("Cache-Control: no-cache")
+    @Headers(
+        "Cache-Control: no-cache",
+        "Content-Type: application/json"
+    )
     @GET("MigracionAll")
     fun getSync(
         @Query("operarioId") operarioId: Int,

@@ -34,6 +34,9 @@ interface PhotoDao {
     @Query("SELECT * FROM Photo WHERE iD_Suministro =:id")
     fun getPhotoByFk(id: Int): List<Photo>
 
+    @Query("SELECT * FROM Photo WHERE estado = 1")
+    fun getPhotosTask(): List<Photo>
+
     @Query("SELECT * FROM Photo WHERE rutaFoto =:img")
     fun getPhotoByName(img: String): Photo?
 

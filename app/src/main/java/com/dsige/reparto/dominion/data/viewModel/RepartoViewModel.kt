@@ -213,7 +213,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
     }
 
     fun sendFiles(context: Context) {
-        val files = roomRepository.getFiles()
+        val files = roomRepository.getFiles(context)
         files.flatMap { observable ->
             Observable.fromIterable(observable).flatMap { a ->
                 val b = MultipartBody.Builder()
@@ -239,10 +239,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<String> {
                 override fun onSubscribe(d: Disposable) {}
-                override fun onNext(m: String) {
-//                    Log.i("TAG", m)
-                }
-
+                override fun onNext(m: String) {}
                 override fun onError(e: Throwable) {
                     if (e is HttpException) {
                         val body = e.response().errorBody()
@@ -251,8 +248,6 @@ internal constructor(private val roomRepository: AppRepository, private val retr
                             mensajeError.postValue(error!!.Message)
                         } catch (e1: IOException) {
                             mensajeError.postValue(e1.toString())
-                            e1.printStackTrace()
-//                            Log.i("TAG", e1.toString())
                         }
                     } else {
                         mensajeError.postValue(e.message)

@@ -94,6 +94,7 @@ class MainFragment : DaggerFragment(), View.OnClickListener {
                                 .putExtra("Cod_Orden_Reparto", r.Cod_Orden_Reparto)
                                 .putExtra("id_cab_Reparto", r.id_Reparto)
                                 .putExtra("suministroNumeroReparto", r.Suministro_Numero_reparto)
+                                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                         )
                     }
                 }

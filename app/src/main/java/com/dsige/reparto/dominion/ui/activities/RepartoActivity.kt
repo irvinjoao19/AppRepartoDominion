@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
@@ -23,7 +24,6 @@ import com.dsige.reparto.dominion.data.local.model.Reparto
 import com.dsige.reparto.dominion.data.viewModel.RepartoViewModel
 import com.dsige.reparto.dominion.data.viewModel.ViewModelFactory
 import com.dsige.reparto.dominion.helper.Gps
-import com.dsige.reparto.dominion.helper.Permission
 import com.dsige.reparto.dominion.helper.Util
 import com.dsige.reparto.dominion.ui.listeners.OnItemClickListener
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -67,14 +67,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                 } else repartoViewModel.setError("Se requiere foto")
             }
             R.id.imageView -> if (cantidad < 2) {
-                goCamera()
-//                startActivity(
-//                    Intent(this, CameraActivity::class.java)
-//                        .putExtra("repartoId", repartoId)
-//                        .putExtra("cuentaContrato", barcode_code)
-//                        .putExtra("tipo", 1)
-//                        .putExtra("direccion", direccion)
-//                )
+                formPhoto()
             } else {
                 Util.dialogMensaje(this, "Mensaje", "Maximo 2 fotos")
             }
@@ -100,6 +93,8 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
     private var operarioId: Int = 0
     private var cliente: String = ""
     private var nameImg = ""
+    private var latitud: String = ""
+    private var longitud: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -162,7 +157,10 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                     val str = barcode2[0].replace(("[^\\d.]").toRegex(), "")
                     generateReparto(str)
                 }
-                Util.getTextStyleHtml(String.format("<strong>Ultimo resultado:</strong> %s", data),textViewResult)
+                Util.getTextStyleHtml(
+                    String.format("<strong>Ultimo resultado:</strong> %s", data),
+                    textViewResult
+                )
             }
             true
         }
@@ -216,6 +214,8 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
             barcode_code = r.Suministro_Numero_reparto
             operarioId = r.id_Operario_Reparto
             cliente = r.Cliente_Reparto
+            latitud = r.latitud
+            longitud = r.longitud
             cardViewRegistro.visibility = View.GONE
             validation = r.foto_Reparto
             suministroReparto.text = String.format("Cuenta Contrato : %s", barcode_code)
@@ -300,6 +300,21 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
         popupMenu.show()
     }
 
+    private fun formPhoto() {
+        val gps = Gps(this)
+        if (gps.isLocationEnabled()) {
+            if (latitud.isEmpty()) {
+                latitud = gps.getLatitude().toString()
+            }
+            if (longitud.isEmpty()) {
+                longitud = gps.getLongitude().toString()
+            }
+            goCamera()
+        } else {
+            gps.showSettingsAlert(this)
+            return
+        }
+    }
 
     private fun goCamera() {
         Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
@@ -321,28 +336,30 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                             e.printStackTrace()
                         }
                     }
-                    startActivityForResult(takePictureIntent, Permission.CAMERA_REQUEST)
+//                    startActivityForResult(takePictureIntent, Permission.CAMERA_REQUEST)
+                    resultLauncher.launch(takePictureIntent)
                 }
             }
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == Permission.CAMERA_REQUEST && resultCode == RESULT_OK) {
-            val gps = Gps(this)
-            if (gps.isLocationEnabled()) {
+    private val resultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
                 repartoViewModel.generarArchivo(
                     nameImg,
                     this@RepartoActivity,
                     direccion,
-                    gps.getLatitude().toString(),
-                    gps.getLongitude().toString(),
+                    latitud,
+                    longitud,
                     repartoId
                 )
-            } else {
-                gps.showSettingsAlert(this)
             }
         }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == Permission.CAMERA_REQUEST && resultCode == RESULT_OK) {
+//
+//        }
+//    }
 }

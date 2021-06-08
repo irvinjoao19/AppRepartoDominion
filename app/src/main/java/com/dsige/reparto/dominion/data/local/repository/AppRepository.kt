@@ -62,7 +62,7 @@ interface AppRepository {
     fun updateEnabledBattery(t: Mensaje): Completable
 
     //envio
-    fun getFiles(): Observable<List<String>>
+    fun getFiles(context:Context): Observable<List<String>>
     fun sendPhotos(body: RequestBody): Observable<String>
     fun sendRegistro(body: RequestBody): Observable<Mensaje>
 

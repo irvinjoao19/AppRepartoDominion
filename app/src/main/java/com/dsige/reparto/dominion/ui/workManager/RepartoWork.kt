@@ -40,7 +40,7 @@ internal constructor(
     }
 
     private fun sendFiles(context: Context) {
-        val files = roomRepository.getFiles()
+        val files = roomRepository.getFiles(context)
         files.flatMap { observable ->
             Observable.fromIterable(observable).flatMap { a ->
                 val b = MultipartBody.Builder()

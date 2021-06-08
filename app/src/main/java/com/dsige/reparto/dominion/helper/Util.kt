@@ -568,7 +568,8 @@ object Util {
         context: Context,
         photoPath: String,
         fecha: String,
-        direccion: String
+        direccion: String,
+        coordenadas: String
     ): String {
         try {
             val ei = ExifInterface(photoPath)
@@ -583,7 +584,7 @@ object Util {
                 ExifInterface.ORIENTATION_UNDEFINED -> 0
                 else -> 90
             }
-            return rotateImage(context, degree, photoPath, fecha, direccion)
+            return rotateImage(context, degree, photoPath, fecha, direccion, coordenadas)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -597,7 +598,8 @@ object Util {
         degree: Int,
         imagePath: String,
         fecha: String,
-        direccion: String
+        direccion: String,
+        coordenadas: String
     ): String {
         try {
             var b: Bitmap = shrinkBitmap(imagePath)
@@ -606,13 +608,14 @@ object Util {
             b = Bitmap.createBitmap(b, 0, 0, b.width, b.height, matrix, true)
 
             val text = String.format(
-                "%s\n%s",
+                "%s\n%s\n%s",
                 if (fecha.isEmpty()) getDateTimeFormatString(Date(File(imagePath).lastModified())) else String.format(
                     "%s %s",
                     fecha,
                     getHoraActual()
                 ),
-                direccion
+                direccion,
+                coordenadas
             )
             b = drawTextToBitmap(context, b, text)
 
@@ -818,20 +821,22 @@ object Util {
         return Observable.create {
             val f = File(getFolder(context), "$nameImg.jpg")
             if (f.exists()) {
-                getAngleImage(context, f.absolutePath, "", direccion)
+                val coordenadas = "Latitud : $latitud  Longitud : $longitud"
+                getAngleImage(context, f.absolutePath, "", direccion, coordenadas)
+                val photo = Photo(
+                    0,
+                    id,
+                    "$nameImg.jpg",
+                    getFechaActual(),
+                    5,
+                    1,
+                    latitud,
+                    longitud
+                )
+                it.onNext(photo)
+                it.onComplete()
             }
-            val photo = Photo(
-                0,
-                id,
-                "$nameImg.jpg",
-                getFechaActual(),
-                5,
-                1,
-                latitud,
-                longitud
-            )
-            it.onNext(photo)
-            it.onComplete()
+
         }
     }
 
