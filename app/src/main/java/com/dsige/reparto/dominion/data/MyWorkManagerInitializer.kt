@@ -5,7 +5,7 @@ import android.content.ContentValues
 import android.net.Uri
 import androidx.work.Configuration
 import androidx.work.WorkManager
-import com.dsige.reparto.dominion.ui.workManager.WorkManagerFactory
+import com.dsige.reparto.dominion.data.workManager.WorkManagerFactory
 import javax.inject.Inject
 
 class MyWorkManagerInitializer  : DummyContentProvider() {

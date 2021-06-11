@@ -1,6 +1,6 @@
 package com.dsige.reparto.dominion.data.module
 
-import com.dsige.reparto.dominion.ui.workManager.*
+import com.dsige.reparto.dominion.data.workManager.*
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap

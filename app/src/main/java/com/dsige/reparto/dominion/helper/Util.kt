@@ -30,16 +30,9 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.dsige.reparto.dominion.BuildConfig
 import com.dsige.reparto.dominion.R
 import com.dsige.reparto.dominion.data.local.model.Photo
-import com.dsige.reparto.dominion.ui.workManager.BatteryWork
-import com.dsige.reparto.dominion.ui.workManager.GpsWork
-import com.dsige.reparto.dominion.ui.workManager.RepartoWork
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -742,70 +735,6 @@ object Util {
                 }
             }
         }
-    }
-
-    // execute services
-    fun executeRepartoWork(context: Context) {
-//        val downloadConstraints = Constraints.Builder()
-//            .setRequiresCharging(true)
-//            .setRequiredNetworkType(NetworkType.CONNECTED)
-//            .build()
-        // Define the input data for work manager
-//        val data = Data.Builder()
-//        data.putInt("tipo", tipo)
-
-        // Create an one time work request
-        val downloadImageWork = OneTimeWorkRequest
-            .Builder(RepartoWork::class.java)
-//          .setInputData(data.build())
-//          .setConstraints(downloadConstraints)
-            .build()
-        WorkManager.getInstance(context).enqueue((downloadImageWork))
-    }
-
-    fun executeGpsWork(context: Context) {
-//        val downloadConstraints = Constraints.Builder()
-//            .setRequiresCharging(true)
-//            .setRequiredNetworkType(NetworkType.CONNECTED)
-//            .build()
-        val locationWorker =
-            PeriodicWorkRequestBuilder<GpsWork>(15, TimeUnit.MINUTES)
-//                .setConstraints(downloadConstraints)
-                .build()
-        WorkManager
-            .getInstance(context)
-            .enqueueUniquePeriodicWork(
-                "Gps-Work",
-                ExistingPeriodicWorkPolicy.REPLACE,
-                locationWorker
-            )
-        toastMensaje(context, "Servicio Gps Activado")
-    }
-
-    fun closeGpsWork(context: Context) {
-        WorkManager.getInstance(context).cancelAllWorkByTag("Gps-Work")
-    }
-
-    fun executeBatteryWork(context: Context) {
-//        val downloadConstraints = Constraints.Builder()
-//            .setRequiresCharging(true)
-//            .setRequiredNetworkType(NetworkType.CONNECTED)
-//            .build()
-        val locationWorker =
-            PeriodicWorkRequestBuilder<BatteryWork>(15, TimeUnit.MINUTES)
-//                .setConstraints(downloadConstraints)
-                .build()
-        WorkManager
-            .getInstance(context)
-            .enqueueUniquePeriodicWork(
-                "Battery-Work",
-                ExistingPeriodicWorkPolicy.REPLACE,
-                locationWorker
-            )
-    }
-
-    fun closeBatteryWork(context: Context) {
-        WorkManager.getInstance(context).cancelAllWorkByTag("Battery-Work")
     }
 
     fun createImageFile(name: String, context: Context): File {

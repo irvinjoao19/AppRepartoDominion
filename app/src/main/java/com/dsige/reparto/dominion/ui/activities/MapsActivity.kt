@@ -43,10 +43,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
     private var longitud: String = ""
     private var title: String = ""
 
-    override fun onResume() {
-        super.onResume()
-        isGPSEnabled()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,6 +106,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
                 MIN_DISTANCE_CHANGE_FOR_UPDATES.toFloat(),
                 this
             )
+            isGPSEnabled()
         } else {
             ActivityCompat.requestPermissions(this, permisos, 1)
         }
@@ -166,7 +163,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
     }
 
     override fun onLocationChanged(location: Location) {
-
         if (isFirstTime) {
             zoomToLocation(location)
             place1 = MarkerOptions().position(LatLng(location.latitude, location.longitude)).title("YO")

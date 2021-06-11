@@ -5,6 +5,14 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.dsige.reparto.dominion.data.workManager.BatteryWork
+import com.dsige.reparto.dominion.data.workManager.GpsWork
+import com.dsige.reparto.dominion.data.workManager.RepartoWork
+import java.util.concurrent.TimeUnit
 
 object Permission {
 
@@ -37,5 +45,60 @@ object Permission {
         return true
     }
 
+    fun executeGpsWork(context: Context) {
+//        val downloadConstraints = Constraints.Builder()
+//            .setRequiresCharging(true)
+//            .setRequiredNetworkType(NetworkType.CONNECTED)
+//            .build()
+        val locationWorker =
+            PeriodicWorkRequestBuilder<GpsWork>(15, TimeUnit.MINUTES)
+//                .setConstraints(downloadConstraints)
+                .build()
+        WorkManager
+            .getInstance(context)
+            .enqueueUniquePeriodicWork(
+                "Gps-Work",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                locationWorker
+            )
+        Util.toastMensaje(context, "Servicio Gps Activado")
+    }
 
+    fun closeGpsWork(context: Context) {
+        WorkManager.getInstance(context).cancelAllWorkByTag("Gps-Work")
+    }
+
+    fun executeBatteryWork(context: Context) {
+        val locationWorker =
+            PeriodicWorkRequestBuilder<BatteryWork>(15, TimeUnit.MINUTES)
+                .build()
+        WorkManager
+            .getInstance(context)
+            .enqueueUniquePeriodicWork(
+                "Battery-Work",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                locationWorker
+            )
+    }
+
+    fun closeBatteryWork(context: Context) {
+        WorkManager.getInstance(context).cancelAllWorkByTag("Battery-Work")
+    }
+
+    fun executeRepartoWork(context: Context) {
+        val locationWorker =
+            PeriodicWorkRequestBuilder<RepartoWork>(1, TimeUnit.HOURS)
+                .build()
+        WorkManager
+            .getInstance(context)
+            .enqueueUniquePeriodicWork(
+                "Reparto-Work",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                locationWorker
+            )
+    }
+
+    fun closeRepartoWork(context: Context) {
+        WorkManager.getInstance(context).cancelAllWorkByTag("Reparto-Work")
+    }
 }

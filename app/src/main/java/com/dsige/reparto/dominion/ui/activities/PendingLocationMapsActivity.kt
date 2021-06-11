@@ -39,11 +39,6 @@ class PendingLocationMapsActivity : DaggerAppCompatActivity(), OnMapReadyCallbac
     lateinit var locationManager: LocationManager
     private var isFirstTime: Boolean = true
 
-    override fun onResume() {
-        super.onResume()
-        isGPSEnabled()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pending_location_maps)
@@ -73,8 +68,7 @@ class PendingLocationMapsActivity : DaggerAppCompatActivity(), OnMapReadyCallbac
         }
         mMap.isMyLocationEnabled = true
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15000, 0f, this)
-
-
+        isGPSEnabled()
         repartoViewModel.getRepartos().observe(this, {
             mMap.clear()
             for (s: Reparto in it) {

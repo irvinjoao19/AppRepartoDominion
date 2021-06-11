@@ -10,6 +10,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RawRes
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
@@ -33,8 +34,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.activity_reparto.*
-import kotlinx.android.synthetic.main.activity_reparto.recyclerView
-import kotlinx.android.synthetic.main.fragment_main.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
@@ -56,7 +55,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                                 startActivity(
                                     Intent(this@RepartoActivity, FormRepartoActivity::class.java)
                                         .putExtra("repartoId", t)
-                                        .putExtra("recibo", barcode_code)
+                                        .putExtra("recibo", barcodeCode)
                                         .putExtra("operarioId", operarioId)
                                         .putExtra("cliente", cliente)
                                         .putExtra("validation", validation)
@@ -77,15 +76,12 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
     @Inject
     lateinit var viewModelFactory: ViewModelFactory
     lateinit var repartoViewModel: RepartoViewModel
-    lateinit var play_formulario: MediaPlayer
-    lateinit var play_normal: MediaPlayer
-    lateinit var play_3: MediaPlayer
-    lateinit var photoRepartoAdapter: PhotoAdapter
+    private lateinit var photoRepartoAdapter: PhotoAdapter
 
     private var cantidad: Int = 0
-    private var barcode_code: String = ""
-    private var Cod_Orden_Reparto: String = ""
-    private var id_Cab_Reparto: Int = 0
+    private var barcodeCode: String = ""
+    private var codOrdenReparto: String = ""
+    private var idCabReparto: Int = 0
     private var validation: Int = 0
     private var repartoId: Int = 0
     private var direccion: String = ""
@@ -102,8 +98,8 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
 
         val bundle = intent.extras
         if (bundle != null) {
-            Cod_Orden_Reparto = bundle.getString("Cod_Orden_Reparto")!!
-            id_Cab_Reparto = bundle.getInt("id_cab_Reparto")
+            codOrdenReparto = bundle.getString("Cod_Orden_Reparto")!!
+            idCabReparto = bundle.getInt("id_cab_Reparto")
             bindUI(bundle.getString("suministroNumeroReparto")!!)
         }
     }
@@ -114,10 +110,6 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
 
         setSupportActionBar(toolbar)
         supportActionBar!!.title = "SuministroReparto"
-
-        play_3 = MediaPlayer.create(this, R.raw.ic_error)
-        play_formulario = MediaPlayer.create(this, R.raw.reparto_formulario)
-        play_normal = MediaPlayer.create(this, R.raw.reparto_normal)
 
         photoRepartoAdapter = PhotoAdapter(object : OnItemClickListener.PhotoListener {
             override fun onItemClick(p: Photo, v: View, position: Int) {
@@ -133,7 +125,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
         textViewTitle.text = getString(R.string.codigoManual)
         suministroReparto.text = String.format("Cuenta Contrato : %s", suministroNumeroReparto)
 
-        editTextCodigoBarra.setOnEditorActionListener { p, p1, p2 ->
+        editTextCodigoBarra.setOnEditorActionListener { p, _, _ ->
             val data = p.text
             if (data.isNotEmpty()) {
                 var tipo = 0
@@ -167,13 +159,6 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
 
         editTextCodigoBarra.isFocusableInTouchMode = true
         editTextCodigoBarra.requestFocus()
-
-        repartoViewModel.getAllRegistro(1).observe(this, {
-            if (it >= 100) {
-                Util.executeRepartoWork(this)
-            }
-        })
-
         repartoViewModel.mensajeError.observe(this, {
             Util.toastMensaje(this, it)
         })
@@ -193,7 +178,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                 override fun onError(e: Throwable) {
                     editTextCodigoBarra.text = null
                     cardViewDescripcion.visibility = View.GONE
-                    play_3.start()
+                    playSound(R.raw.ic_error)
                 }
             })
     }
@@ -211,14 +196,14 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
             textView3.text = r.Suministro_Medidor_reparto
             repartoId = r.id_Reparto
             direccion = r.Direccion_Reparto
-            barcode_code = r.Suministro_Numero_reparto
+            barcodeCode = r.Suministro_Numero_reparto
             operarioId = r.id_Operario_Reparto
             cliente = r.Cliente_Reparto
             latitud = r.latitud
             longitud = r.longitud
             cardViewRegistro.visibility = View.GONE
             validation = r.foto_Reparto
-            suministroReparto.text = String.format("Cuenta Contrato : %s", barcode_code)
+            suministroReparto.text = String.format("Cuenta Contrato : %s", barcodeCode)
             val registro = Registro(
                 r.id_Reparto,
                 r.id_Reparto,
@@ -238,10 +223,10 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
             if (validation != 0) {
                 bindListFoto(r.id_Reparto)
                 cardViewRegistro.visibility = View.VISIBLE
-                play_formulario.start()
+                playSound(R.raw.reparto_formulario)
                 editTextCodigoBarra.visibility = View.GONE
             } else {
-                play_normal.start()
+                playSound(R.raw.reparto_normal)
             }
         } else {
             gps.showSettingsAlert(this)
@@ -262,7 +247,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
             .setTitle("Mensaje")
             .setMessage("Deseas eliminar foto ?")
             .setPositiveButton("SI") { dialog, _ ->
-                repartoViewModel.deletePhoto(p, barcode_code, this)
+                repartoViewModel.deletePhoto(p, barcodeCode, this)
                 dialog.dismiss()
             }
             .setNegativeButton("NO") { dialog, _ ->
@@ -319,7 +304,7 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
     private fun goCamera() {
         Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
             takePictureIntent.resolveActivity(packageManager)?.also {
-                nameImg = Util.getFechaActualForPhoto(barcode_code, 5)
+                nameImg = Util.getFechaActualForPhoto(barcodeCode, 5)
                 val photoFile: File =
                     Util.createImageFile(nameImg, this)
                 photoFile.also {
@@ -356,10 +341,22 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                 )
             }
         }
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//        if (requestCode == Permission.CAMERA_REQUEST && resultCode == RESULT_OK) {
-//
-//        }
-//    }
+
+    private val mediaPlayer = MediaPlayer().apply {
+        setOnPreparedListener { start() }
+        setOnCompletionListener { reset() }
+    }
+
+    fun playSound(@RawRes rawResId: Int) {
+        val assetFileDescriptor = this.resources.openRawResourceFd(rawResId) ?: return
+        mediaPlayer.run {
+            reset()
+            setDataSource(
+                assetFileDescriptor.fileDescriptor,
+                assetFileDescriptor.startOffset,
+                assetFileDescriptor.declaredLength
+            )
+            prepareAsync()
+        }
+    }
 }

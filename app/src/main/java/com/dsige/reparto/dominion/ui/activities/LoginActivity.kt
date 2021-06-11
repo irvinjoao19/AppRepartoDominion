@@ -25,6 +25,7 @@ class LoginActivity : DaggerAppCompatActivity(), View.OnClickListener {
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         var cantidad = 0
 
         when (requestCode) {
@@ -52,7 +53,7 @@ class LoginActivity : DaggerAppCompatActivity(), View.OnClickListener {
                 if (usuario.isNotEmpty()) {
                     if (pass.isNotEmpty()) {
                         load()
-                        if (Build.VERSION.SDK_INT == 29) {
+                        if (Build.VERSION.SDK_INT >= 29) {
                             usuarioViewModel.getLogin(
                                 usuario, pass, pass, Util.getVersion(this), Util.getVersion(this)
                             )
@@ -139,7 +140,9 @@ class LoginActivity : DaggerAppCompatActivity(), View.OnClickListener {
     }
 
     private fun goMainActivity() {
-        Util.executeGpsWork(this)
+        Permission.executeGpsWork(this)
+        Permission.executeBatteryWork(this)
+        Permission.executeRepartoWork(this)
         startActivity(
             Intent(this, MainActivity::class.java)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

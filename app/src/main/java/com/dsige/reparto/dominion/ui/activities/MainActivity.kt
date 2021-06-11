@@ -21,6 +21,7 @@ import com.dsige.reparto.dominion.ui.fragments.MainFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.dsige.reparto.dominion.data.viewModel.ViewModelFactory
+import com.dsige.reparto.dominion.helper.Permission
 import com.dsige.reparto.dominion.ui.fragments.SendFragment
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
@@ -94,8 +95,8 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
                 SendFragment.newInstance("", ""), item.title.toString()
             )
             "Servicio Gps" -> {
-                Util.executeGpsWork(this)
-                Util.executeBatteryWork(this)
+                Permission.executeGpsWork(this)
+                Permission.executeBatteryWork(this)
             }
             "Cerrar Sesión" -> dialogFunction(
                 3, "Al cerrar Sesión estaras eliminando todo tus avances. \nDeseas Salir ?"
@@ -191,7 +192,7 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
                         usuarioViewModel.sync(usuarioId, Util.getVersion(this))
                     }
                     2 -> {
-                        Util.executeRepartoWork(this)
+                        Permission.executeRepartoWork(this)
                         Util.dialogMensaje(
                             this,
                             "Mensaje",
@@ -200,8 +201,9 @@ class MainActivity : DaggerAppCompatActivity(), NavigationView.OnNavigationItemS
                     }
                     3 -> {
                         logout = "on"
-                        Util.closeGpsWork(this)
-                        Util.closeBatteryWork(this)
+                        Permission.closeGpsWork(this)
+                        Permission.closeBatteryWork(this)
+                        Permission.closeRepartoWork(this)
                         load("Cerrando Session")
                         usuarioViewModel.logout()
                     }

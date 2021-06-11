@@ -1,4 +1,4 @@
-package com.dsige.reparto.dominion.ui.workManager
+package com.dsige.reparto.dominion.data.workManager
 
 import android.annotation.SuppressLint
 import android.content.Context
