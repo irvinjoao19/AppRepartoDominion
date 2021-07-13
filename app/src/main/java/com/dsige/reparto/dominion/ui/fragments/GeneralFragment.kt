@@ -36,7 +36,7 @@ private const val ARG_PARAM5 = "param5"
 class GeneralFragment : DaggerFragment(), View.OnClickListener {
 
     override fun onClick(v: View) {
-        Util.hideKeyboardFrom(context!!, v)
+        Util.hideKeyboardFrom(requireContext(), v)
         when (v.id) {
             R.id.editTextVivienda -> dialogSpinner(2, "Vivienda")
             R.id.editTextColorFachada -> dialogSpinner(3, "Color/Fachada")
@@ -89,7 +89,7 @@ class GeneralFragment : DaggerFragment(), View.OnClickListener {
 
         editTextRecibo.setText(recibo)
         editTextCliente.setText(cliente)
-        viewPager = activity!!.findViewById(R.id.viewPager)
+        viewPager = requireActivity().findViewById(R.id.viewPager)
 
         repartoViewModel.getReciboByFk(repartoId).observe(viewLifecycleOwner, {
             if (it != null) {
@@ -110,11 +110,11 @@ class GeneralFragment : DaggerFragment(), View.OnClickListener {
 
 
         repartoViewModel.mensajeError.observe(viewLifecycleOwner, {
-            Util.toastMensaje(context!!, it)
+            Util.toastMensaje(requireContext(), it)
         })
         repartoViewModel.mensajeSuccess.observe(viewLifecycleOwner, {
             if (it != null) {
-                Util.hideKeyboardFrom(requireContext(), view!!)
+                Util.hideKeyboardFrom(requireContext(), requireView())
                 Util.toastMensaje(requireContext(), it)
                 if (validation == 2) {
                     viewPager?.currentItem = 1

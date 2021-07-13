@@ -3,7 +3,7 @@ package com.dsige.reparto.dominion.data
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.dsige.reparto.dominion.data.components.DaggerApplicationComponent
-import com.dsige.reparto.dominion.data.workManager.WorkManagerFactory
+import com.dsige.reparto.dominion.ui.workManager.WorkManagerFactory
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 import javax.inject.Inject

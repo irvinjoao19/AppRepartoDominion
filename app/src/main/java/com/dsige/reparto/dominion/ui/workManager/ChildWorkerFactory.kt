@@ -1,4 +1,4 @@
-package com.dsige.reparto.dominion.data.workManager
+package com.dsige.reparto.dominion.ui.workManager
 
 import android.content.Context
 import androidx.work.ListenableWorker

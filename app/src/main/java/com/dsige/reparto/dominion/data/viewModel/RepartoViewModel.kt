@@ -58,10 +58,6 @@ internal constructor(private val roomRepository: AppRepository, private val retr
         return roomRepository.getCodigoBarra(barCode, i)
     }
 
-    fun getAllRegistro(i: Int): LiveData<Int> {
-        return roomRepository.getAllRegistro(i)
-    }
-
     fun saveReparto(r: Registro) {
         roomRepository.saveReparto(r)
             .subscribeOn(Schedulers.io())
@@ -302,7 +298,7 @@ internal constructor(private val roomRepository: AppRepository, private val retr
             })
     }
 
-    fun generarArchivo(
+    fun generatePhoto(
         nameImg: String,
         context: Context,
         direccion: String,
@@ -310,9 +306,8 @@ internal constructor(private val roomRepository: AppRepository, private val retr
         longitud: String,
         id: Int
     ) {
-        Util.getPhotoAdjunto(
-            nameImg, context, direccion,
-            latitud, longitud, id
+        Util.generatePhoto(
+            nameImg, context, direccion, latitud, longitud, id
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

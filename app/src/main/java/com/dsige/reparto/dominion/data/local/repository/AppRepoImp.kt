@@ -60,6 +60,7 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
             dataBase.registroDao().deleteAll()
             dataBase.repartoDao().deleteAll()
             dataBase.servicioDao().deleteAll()
+            dataBase.repartoDao().deleteAll()
         }
     }
 
@@ -288,7 +289,7 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
     }
 
 
-    override fun getFiles(context:Context): Observable<List<String>> {
+    override fun getFiles(context: Context): Observable<List<String>> {
         return Observable.create {
             val files: ArrayList<String> = ArrayList()
             val v: List<Registro> = dataBase.registroDao().getRegistroTask(1)
@@ -326,4 +327,28 @@ class AppRepoImp(private val apiService: ApiService, private val dataBase: AppDa
     override fun sendRegistro(body: RequestBody): Observable<Mensaje> {
         return apiService.sendRegistro(body)
     }
+
+//    override fun insertReparto(): Completable {
+//        return Completable.fromAction {
+//            val a = Reparto()
+//            a.id_Reparto = 1
+//            a.id_Operario_Reparto = 1
+//            a.foto_Reparto = 2
+//            a.id_observacion = 1
+//            a.Suministro_Medidor_reparto = "100"
+//            a.Suministro_Numero_reparto = "100"
+//            a.Direccion_Reparto = "Mz D lote 20 Urb Virgen de Fatima"
+//            a.Cod_Orden_Reparto = "10"
+//            a.Cod_Actividad_Reparto = "10"
+//            a.Cliente_Reparto = "Irvin Joao"
+//            a.CodigoBarra = "1"
+//            a.estado = 1
+//            a.activo = 1
+//            a.latitud = ""
+//            a.longitud = ""
+//            a.isActive = true
+//
+//            dataBase.repartoDao().insertRepartoTask(a)
+//        }
+//    }
 }

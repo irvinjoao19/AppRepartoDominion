@@ -24,7 +24,4 @@ abstract class ActivityBindingModule {
 
     @ContributesAndroidInjector
     internal abstract fun bindFirmActivity(): FirmActivity
-
-    @ContributesAndroidInjector
-    internal abstract fun bindPreviewCameraActivity(): PreviewCameraActivity
 }

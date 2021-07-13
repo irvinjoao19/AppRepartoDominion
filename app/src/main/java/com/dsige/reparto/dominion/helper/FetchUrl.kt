@@ -57,10 +57,8 @@ class FetchUrl(private val url: String, private val directionMode: String, conte
                 sb.append(line)
             }
             data = sb.toString()
-//            Log.d("mylog", "Downloaded URL: $data")
             br.close()
         } catch (e: Exception) {
-//            Log.d("mylog", "Exception downloading URL: $e")
         } finally {
             iStream?.close()
             urlConnection?.disconnect()
@@ -69,7 +67,6 @@ class FetchUrl(private val url: String, private val directionMode: String, conte
     }
 
     private fun pointsPaser(json: String) {
-
         val points: Observable<List<List<HashMap<String, String>>>> = Observable.create {
             val routes: List<List<HashMap<String, String>>>
             val jObject = JSONObject(json)
@@ -87,7 +84,6 @@ class FetchUrl(private val url: String, private val directionMode: String, conte
                     onPostExecute(t)
                 }
             })
-
     }
 
     private fun onPostExecute(result: List<List<HashMap<String, String>>>) {
@@ -113,7 +109,6 @@ class FetchUrl(private val url: String, private val directionMode: String, conte
                 lineOptions.width(13f)
                 lineOptions.color(Color.RED)
             }
-//            Log.d("mylog", "onPostExecute lineoptions decoded")
         }
         if (lineOptions != null) {
             taskCallback.onTaskDone(lineOptions)

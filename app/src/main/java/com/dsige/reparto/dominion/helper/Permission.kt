@@ -6,17 +6,16 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.dsige.reparto.dominion.data.workManager.BatteryWork
-import com.dsige.reparto.dominion.data.workManager.GpsWork
-import com.dsige.reparto.dominion.data.workManager.RepartoWork
+import com.dsige.reparto.dominion.ui.workManager.BatteryWork
+import com.dsige.reparto.dominion.ui.workManager.GpsWork
+import com.dsige.reparto.dominion.ui.workManager.RepartoWork
 import java.util.concurrent.TimeUnit
 
 object Permission {
 
-    val PERMISSION_ALL = 1
+    const val PERMISSION_ALL = 1
     val PERMISSIONS = arrayOf(
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.CAMERA,
@@ -24,14 +23,13 @@ object Permission {
         Manifest.permission.READ_PHONE_STATE
     )
 
-    val CAMERA_REQUEST = 1
-    val GALERY_REQUEST = 2
-    val SPEECH_REQUEST = 3
-    val REGISTRO_REQUEST = 4
-    val UPDATE_REGISTRO_REQUEST = 5
-    val CANCEL_REGISTOR_REQUEST = 6
-
-    val POLICY_REQUEST = 7
+//    val CAMERA_REQUEST = 1
+//    val GALERY_REQUEST = 2
+//    val SPEECH_REQUEST = 3
+//    val REGISTRO_REQUEST = 4
+//    val UPDATE_REGISTRO_REQUEST = 5
+//    val CANCEL_REGISTOR_REQUEST = 6
+//    val POLICY_REQUEST = 7
 
 
     fun hasPermissions(context: Context?, vararg permissions: String): Boolean {

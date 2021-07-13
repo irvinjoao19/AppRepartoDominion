@@ -17,18 +17,17 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 open class Gps(var context: Context) : LocationListener {
 
     private var locationManager: LocationManager? = null
-    var location: Location? = null
+    private var location: Location? = null
     internal var latitude: Double = 0.toDouble()
     internal var longitude: Double = 0.toDouble()
-    private val MIN_DISTANCE_CHANGE_FOR_UPDATES: Long = 10
-    private val MIN_TIME_BW_UPDATES: Long = 5000
+    private val minDistanceChangeForUpdates: Long = 10
+    private val minTimeBwUpdates: Long = 5000
 
     init {
         getLocation()
     }
 
     private fun getLocation() {
-
         val permisos = arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -51,15 +50,15 @@ open class Gps(var context: Context) : LocationListener {
             if (isNetworkEnabled) {
                 locationManager!!.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER,
-                    MIN_TIME_BW_UPDATES,
-                    MIN_DISTANCE_CHANGE_FOR_UPDATES.toFloat(),
+                    minTimeBwUpdates,
+                    minDistanceChangeForUpdates.toFloat(),
                     this
                 )
 
                 locationManager!!.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER,
-                    MIN_TIME_BW_UPDATES,
-                    MIN_DISTANCE_CHANGE_FOR_UPDATES.toFloat(),
+                    minTimeBwUpdates,
+                    minDistanceChangeForUpdates.toFloat(),
                     this
                 )
                 if (locationManager != null) {
@@ -75,8 +74,8 @@ open class Gps(var context: Context) : LocationListener {
                 if (location == null) {
                     locationManager!!.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES.toFloat(),
+                        minTimeBwUpdates,
+                        minDistanceChangeForUpdates.toFloat(),
                         this
                     )
                     if (locationManager != null) {
@@ -147,9 +146,6 @@ open class Gps(var context: Context) : LocationListener {
     }
 
     override fun onProviderDisabled(provider: String) {}
-
     override fun onProviderEnabled(provider: String) {}
-
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
-
 }

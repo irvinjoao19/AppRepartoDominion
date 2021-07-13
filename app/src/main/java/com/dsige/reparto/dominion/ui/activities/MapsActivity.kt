@@ -28,21 +28,19 @@ import com.google.android.gms.maps.model.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, TaskLoadedCallback {
 
-    lateinit var camera: CameraPosition
-    lateinit var mMap: GoogleMap
+    private lateinit var camera: CameraPosition
+    private lateinit var mMap: GoogleMap
     private var mapView: View? = null
-    lateinit var place1: MarkerOptions
-    lateinit var place2: MarkerOptions
-    private var currentPolyline: Polyline? = null
-    lateinit var locationManager: LocationManager
+    private lateinit var place1: MarkerOptions
+    private lateinit var place2: MarkerOptions
+    private lateinit var locationManager: LocationManager
 
     private var isFirstTime: Boolean = true
-    private var MIN_DISTANCE_CHANGE_FOR_UPDATES: Int = 10
-    private var MIN_TIME_BW_UPDATES: Int = 5000
+    private var minDistanceChangeForUpdate: Int = 10
+    private var minTimeBwUpdates: Int = 5000
     private var latitud: String = ""
     private var longitud: String = ""
     private var title: String = ""
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,14 +94,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
 
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                MIN_TIME_BW_UPDATES.toLong(),
-                MIN_DISTANCE_CHANGE_FOR_UPDATES.toFloat(),
+                minTimeBwUpdates.toLong(),
+                minDistanceChangeForUpdate.toFloat(),
                 this
             )
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                MIN_TIME_BW_UPDATES.toLong(),
-                MIN_DISTANCE_CHANGE_FOR_UPDATES.toFloat(),
+                minTimeBwUpdates.toLong(),
+                minDistanceChangeForUpdate.toFloat(),
                 this
             )
             isGPSEnabled()
@@ -124,7 +122,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
 
 
     private fun isGPSEnabled() {
-        val gpsSignal = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        val gpsSignal =
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+                LocationManager.NETWORK_PROVIDER
+            )
         if (!gpsSignal) {
             showInfoAlert()
         }
@@ -145,8 +146,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
     }
 
     override fun onTaskDone(vararg values: Any) {
-        currentPolyline?.remove()
-        currentPolyline = mMap.addPolyline(values[0] as PolylineOptions)
+        mMap.addPolyline(values[0] as PolylineOptions)
     }
 
 
@@ -165,8 +165,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener, 
     override fun onLocationChanged(location: Location) {
         if (isFirstTime) {
             zoomToLocation(location)
-            place1 = MarkerOptions().position(LatLng(location.latitude, location.longitude)).title("YO")
-            place2 = MarkerOptions().position(LatLng(latitud.toDouble(), longitud.toDouble())).title(title)
+            place1 =
+                MarkerOptions().position(LatLng(location.latitude, location.longitude)).title("YO")
+            place2 = MarkerOptions().position(LatLng(latitud.toDouble(), longitud.toDouble()))
+                .title(title)
             isFirstTime = false
             FetchUrl(getUrl(place1.position, place2.position), "driving", this)
         }

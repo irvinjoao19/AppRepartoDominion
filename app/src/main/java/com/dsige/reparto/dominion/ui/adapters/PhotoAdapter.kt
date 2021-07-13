@@ -41,7 +41,7 @@ class PhotoAdapter(private var listener: OnItemClickListener.PhotoListener) :
             val f = File(Util.getFolder(itemView.context), photo.rutaFoto)
             Picasso.get().load(f).into(imageViewPhoto)
             textViewName.text = photo.rutaFoto
-            itemView.setOnClickListener { v -> listener.onItemClick(photo, v, adapterPosition) }
+            itemView.setOnClickListener { v -> listener.onItemClick(photo, v, bindingAdapterPosition) }
         }
     }
 }

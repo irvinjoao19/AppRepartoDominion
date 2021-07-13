@@ -4,7 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity
-open class Photo(// TODO se usara para mostrar la foto de acta de conformidad 0 = normal , 1 = acta , 2 = firma
+open class Photo(
+    //se usara para mostrar la foto de acta de conformidad 0 = normal , 1 = acta , 2 = firma
     var conformidad: Int,
     var iD_Suministro: Int,
     var rutaFoto: String,

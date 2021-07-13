@@ -16,9 +16,9 @@ class FormRepartoActivity : DaggerAppCompatActivity() {
         if (b != null) {
             bindUI(
                 b.getInt("repartoId"),
-                b.getString("recibo")!!,
+                b.getString("recibo",""),
                 b.getInt("operarioId"),
-                b.getString("cliente")!!,
+                b.getString("cliente",""),
                 b.getInt("validation")
             )
         } else {

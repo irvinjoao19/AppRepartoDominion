@@ -1,14 +1,11 @@
 package com.dsige.reparto.dominion.data.viewModel
 
-import android.content.Context
-import android.content.Intent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.dsige.reparto.dominion.data.local.model.*
 import com.dsige.reparto.dominion.data.local.repository.ApiError
 import com.dsige.reparto.dominion.data.local.repository.AppRepository
-import com.dsige.reparto.dominion.helper.Util
 import com.jakewharton.retrofit2.adapter.rxjava2.HttpException
 import io.reactivex.CompletableObserver
 import io.reactivex.Observer
@@ -143,20 +140,6 @@ internal constructor(private val roomRepository: AppRepository, private val retr
                 override fun onError(e: Throwable) {}
                 override fun onComplete() {
                     mensajeSuccess.value = "Sincronización Completa"
-                }
-            })
-    }
-
-
-    fun generarArchivo(nameImg: String, context: Context, data: Intent) {
-        Util.getFolderAdjunto(nameImg, context, data)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : CompletableObserver {
-                override fun onSubscribe(d: Disposable) {}
-                override fun onError(e: Throwable) {}
-                override fun onComplete() {
-                    mensajeSuccess.value = nameImg
                 }
             })
     }

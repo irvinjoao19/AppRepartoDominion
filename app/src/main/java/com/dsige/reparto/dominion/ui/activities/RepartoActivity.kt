@@ -269,16 +269,11 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
         popupMenu.menu.add(1, Menu.FIRST + 1, 1, getText(R.string.deletePhoto))
         popupMenu.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1 -> {
-                    val intent = Intent(this, PreviewCameraActivity::class.java)
-                    intent.putExtra("nameImg", p.rutaFoto)
-                    intent.putExtra("repartoId", 0)
-                    intent.putExtra("tipo", 0)
-                    startActivity(intent)
-                }
-                2 -> {
-                    deletePhoto(p)
-                }
+                1 -> startActivity(
+                    Intent(this, PreviewCameraActivity::class.java)
+                        .putExtra("nameImg", p.rutaFoto)
+                )
+                2 -> deletePhoto(p)
             }
             false
         }
@@ -286,19 +281,23 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
     }
 
     private fun formPhoto() {
-        val gps = Gps(this)
-        if (gps.isLocationEnabled()) {
-            if (latitud.isEmpty()) {
-                latitud = gps.getLatitude().toString()
+        try {
+            val gps = Gps(this)
+            if (gps.isLocationEnabled()) {
+                if (latitud.isEmpty()) {
+                    latitud = gps.getLatitude().toString()
+                }
+                if (longitud.isEmpty()) {
+                    longitud = gps.getLongitude().toString()
+                }
+                goCamera()
+            } else {
+                gps.showSettingsAlert(this)
             }
-            if (longitud.isEmpty()) {
-                longitud = gps.getLongitude().toString()
-            }
-            goCamera()
-        } else {
-            gps.showSettingsAlert(this)
-            return
+        } catch (e: Exception) {
+            repartoViewModel.setError(e.toString())
         }
+
     }
 
     private fun goCamera() {
@@ -321,7 +320,6 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
                             e.printStackTrace()
                         }
                     }
-//                    startActivityForResult(takePictureIntent, Permission.CAMERA_REQUEST)
                     resultLauncher.launch(takePictureIntent)
                 }
             }
@@ -331,13 +329,13 @@ class RepartoActivity : DaggerAppCompatActivity(), View.OnClickListener {
     private val resultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                repartoViewModel.generarArchivo(
-                    nameImg,
-                    this@RepartoActivity,
-                    direccion,
-                    latitud,
-                    longitud,
-                    repartoId
+                repartoViewModel.generatePhoto(
+                    nameImg = nameImg,
+                    context = this@RepartoActivity,
+                    direccion = direccion,
+                    latitud = latitud,
+                    longitud = longitud,
+                    id = repartoId
                 )
             }
         }
